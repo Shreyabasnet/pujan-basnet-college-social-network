@@ -37,20 +37,20 @@ const StudentDashboard = () => {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-500">Current GPA</div>
-                    <div className="text-2xl font-bold">3.8</div>
+                    <div className="text-gray-500">Academic Score</div>
+                    <div className="text-2xl font-bold">
+                        {dashboardData.recentGrades.length > 0 
+                            ? (dashboardData.recentGrades.reduce((acc, g) => acc + (g.grade/g.maxGrade), 0) / dashboardData.recentGrades.length * 100).toFixed(1) + '%'
+                            : 'N/A'}
+                    </div>
+                </div>
+                <div className="bg-white rounded-lg shadow p-4 border border-blue-50">
+                    <div className="text-gray-500 font-medium">Courses</div>
+                    <div className="text-2xl font-bold text-blue-600">{dashboardData.enrolledCourses.length}</div>
                 </div>
                 <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-500">Attendance</div>
-                    <div className="text-2xl font-bold">85%</div>
-                </div>
-                <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-500">Courses</div>
-                    <div className="text-2xl font-bold">6</div>
-                </div>
-                <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-500">Assignments Due</div>
-                    <div className="text-2xl font-bold text-red-500">3</div>
+                    <div className="text-gray-500">Upcoming Events</div>
+                    <div className="text-2xl font-bold text-blue-500">{dashboardData.upcomingDeadlines.length}</div>
                 </div>
             </div>
 

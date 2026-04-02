@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTeacher } from '../../hooks/useTeacher';
 import TeacherStats from '../../components/teacher/TeacherStats';
 import CourseCard from '../../components/teacher/CourseCard';
@@ -7,9 +8,15 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Alert from '../../components/common/Alert';
 
 const TeacherDashboard = () => {
+    const navigate = useNavigate();
     const { getDashboardData, loading, error } = useTeacher();
     const [dashboardData, setDashboardData] = useState({
-        stats: {},
+        stats: {
+            totalStudents: 0,
+            activeCourses: 0,
+            pendingAssignments: 0,
+            avgAttendance: 0
+        },
         recentCourses: [],
         todaySchedule: [],
         recentActivities: []
@@ -21,7 +28,7 @@ const TeacherDashboard = () => {
 
     const fetchDashboardData = async () => {
         const data = await getDashboardData();
-        setDashboardData(data);
+        if (data) setDashboardData(data);
     };
 
     if (loading) return <LoadingSpinner />;
@@ -34,10 +41,16 @@ const TeacherDashboard = () => {
                     Welcome back, Professor!
                 </h1>
                 <div className="flex space-x-2">
-                    <button className="btn btn-primary">
+                    <button 
+                        onClick={() => navigate('/teacher/attendance')}
+                        className="btn btn-primary"
+                    >
                         Take Attendance
                     </button>
-                    <button className="btn btn-secondary">
+                    <button 
+                        onClick={() => navigate('/teacher/assignments')}
+                        className="btn btn-secondary"
+                    >
                         Create Assignment
                     </button>
                 </div>
@@ -97,16 +110,28 @@ const TeacherDashboard = () => {
                     <div className="bg-white rounded-lg shadow p-6">
                         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
                         <div className="space-y-2">
-                            <button className="w-full btn btn-outline text-left">
+                            <button 
+                                onClick={() => navigate('/teacher/attendance')}
+                                className="w-full btn btn-outline text-left"
+                            >
                                 📝 Mark Attendance
                             </button>
-                            <button className="w-full btn btn-outline text-left">
+                            <button 
+                                onClick={() => navigate('/teacher/grades')}
+                                className="w-full btn btn-outline text-left"
+                            >
                                 📊 Update Grades
                             </button>
-                            <button className="w-full btn btn-outline text-left">
+                            <button 
+                                onClick={() => navigate('/feed')}
+                                className="w-full btn btn-outline text-left"
+                            >
                                 📢 Make Announcement
                             </button>
-                            <button className="w-full btn btn-outline text-left">
+                            <button 
+                                onClick={() => navigate('/teacher/materials')}
+                                className="w-full btn btn-outline text-left"
+                            >
                                 📎 Upload Material
                             </button>
                         </div>

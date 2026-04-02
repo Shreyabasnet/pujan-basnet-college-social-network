@@ -11,7 +11,10 @@ export const sendMessage = async (req, res) => {
             sender: senderId,
             receiver: receiverId,
             text,
+            fileUrl: req.file ? `/uploads/pdfs/${req.file.filename}` : '',
+            fileName: req.file ? req.file.originalname : '',
         });
+
 
         await newMessage.save();
 

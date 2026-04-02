@@ -9,7 +9,10 @@ const LandingPage = () => {
 
     useEffect(() => {
         if (!loading && user) {
-            navigate('/feed');
+            const dashboardPath = user.role === 'ADMIN' ? '/admin/dashboard' :
+                user.role === 'TEACHER' ? '/teacher/dashboard' :
+                    '/student/dashboard';
+            navigate(dashboardPath);
         }
     }, [user, loading, navigate]);
 

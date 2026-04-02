@@ -29,9 +29,74 @@ export const useStudent = () => {
         setLoading(true);
         try {
             const response = await studentService.getMyCourses();
-            return response.data;
+            return response.data.data || [];
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to fetch courses');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const getMyGrades = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await studentService.getMyGrades();
+            return response.data.data || [];
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to fetch grades');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const getMyAttendance = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await studentService.getMyAttendance();
+            return response.data.data || [];
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to fetch attendance');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const getTimetable = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await studentService.getTimetable();
+            return response.data.data || [];
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to fetch timetable');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const getMaterials = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await studentService.getMaterials();
+            return response.data.data || [];
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to fetch materials');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const getAssignments = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await studentService.getAssignments();
+            return response.data.data || [];
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to fetch assignments');
             return [];
         } finally {
             setLoading(false);
@@ -42,6 +107,11 @@ export const useStudent = () => {
         loading,
         error,
         getDashboardData,
-        getMyCourses
+        getMyCourses,
+        getMyGrades,
+        getMyAttendance,
+        getTimetable,
+        getMaterials,
+        getAssignments
     };
 };

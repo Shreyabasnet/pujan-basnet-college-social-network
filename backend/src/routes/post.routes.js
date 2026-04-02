@@ -1,9 +1,12 @@
 import express from 'express';
 import multer from 'multer';
-import { createPost, getPosts, deletePost, likePost, commentPost, deleteComment } from '../controllers/post.controller.js';
+import path from 'path';
+
+import { createPost, getPosts, deletePost, likePost, commentPost, deleteComment, updatePost } from '../controllers/post.controller.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
+
 
 // Multer Setup with memory storage for Cloudinary
 const upload = multer({
@@ -12,20 +15,24 @@ const upload = multer({
         fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: function (req, file, cb) {
-        const filetypes = /jpeg|jpg|png|webp|gif/;
+        const filetypes = /jpeg|jpg|png|webp|gif|pdf/;
         const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
 
-        if (mimetype) {
+        if (mimetype && extname) {
             return cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed!'));
+            cb(new Error('Only image and PDF files are allowed!'));
         }
     }
 });
 
-router.post('/', protect, upload.single('image'), createPost);
+router.post('/', protect, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }]), createPost);
+
 router.get('/', protect, getPosts);
+router.put('/:id', protect, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }]), updatePost);
 router.delete('/:id', protect, deletePost);
+
 
 router.put('/:id/like', protect, likePost);
 router.post('/:id/comment', protect, commentPost);

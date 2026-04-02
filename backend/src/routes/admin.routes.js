@@ -7,7 +7,9 @@ import {
     createCourse,
     updateCourse,
     deleteCourse,
-    getDashboardStats
+    getDashboardStats,
+    getAllSettings,
+    updateSetting
 } from '../controllers/admin.controller.js';
 import { protect } from '../middleware/auth.js';
 import { adminOnly } from '../middleware/roleBasedAuth.js';
@@ -27,5 +29,7 @@ router.post('/courses', createCourse);
 router.put('/courses/:id', updateCourse);
 router.delete('/courses/:id', deleteCourse);
 router.get('/dashboard/stats', getDashboardStats);
+router.get('/settings', getAllSettings);
+router.put('/settings', updateSetting);
 
 export default router;

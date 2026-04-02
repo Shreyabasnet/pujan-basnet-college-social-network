@@ -15,13 +15,20 @@ const AdminDashboard = () => {
 
     const [activeTab, setActiveTab] = useState('teachers');
     const [data, setData] = useState([]);
+    const [teachers, setTeachers] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [formData, setFormData] = useState({});
 
     useEffect(() => {
         fetchData();
+        if (activeTab === 'courses') fetchTeachers();
     }, [activeTab]);
+
+    const fetchTeachers = async () => {
+        const result = await getTeachers();
+        setTeachers(result || []);
+    };
 
     const fetchData = async () => {
         let result = [];
@@ -138,6 +145,7 @@ const AdminDashboard = () => {
                 formData={formData}
                 setFormData={setFormData}
                 handleSubmit={handleSubmit}
+                teachers={teachers}
             />
         </div>
     );

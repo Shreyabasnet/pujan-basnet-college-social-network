@@ -16,6 +16,11 @@ const courseSchema = new mongoose.Schema({
         type: String
     },
 
+    department: {
+        type: String,
+        required: true
+    },
+
     teacher: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Course from '../models/Course.js';
+import Setting from '../models/Setting.js';
 
 // Get all teachers
 export const getAllTeachers = async (req, res) => {
@@ -56,7 +57,7 @@ export const getAllCourses = async (req, res) => {
 // Create a course
 export const createCourse = async (req, res) => {
     try {
-        const { name, code, description, teacher, schedule } = req.body;
+        const { name, code, description, department, teacher, schedule } = req.body;
 
         const existingCourse = await Course.findOne({ code });
         if (existingCourse) {
@@ -67,6 +68,7 @@ export const createCourse = async (req, res) => {
             name,
             code,
             description,
+            department,
             teacher,
             schedule
         });
@@ -82,7 +84,7 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, code, description, teacher, schedule } = req.body;
+        const { name, code, description, department, teacher, schedule } = req.body;
 
         const course = await Course.findById(id);
         if (!course) {
@@ -92,6 +94,7 @@ export const updateCourse = async (req, res) => {
         course.name = name || course.name;
         course.code = code || course.code;
         course.description = description || course.description;
+        course.department = department || course.department;
         course.teacher = teacher || course.teacher;
         course.schedule = schedule || course.schedule;
 
@@ -114,6 +117,39 @@ export const deleteCourse = async (req, res) => {
 
         await Course.findByIdAndDelete(id);
         res.status(200).json({ message: 'Course deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// Get all settings
+export const getAllSettings = async (req, res) => {
+    try {
+        const settings = await Setting.find();
+        if (settings.length === 0) {
+            return res.status(200).json([
+                { key: 'allow_registration', value: true, category: 'SECURITY', description: 'Allow new students to register' },
+                { key: 'require_2fa', value: false, category: 'SECURITY', description: 'Require 2FA for Teachers' },
+                { key: 'system_notifications', value: true, category: 'NOTIFICATION', description: 'Email notifications for system alerts' },
+                { key: 'institution_name', value: 'CollegeSocial', category: 'SYSTEM', description: 'Name of the institution' }
+            ]);
+        }
+        res.status(200).json(settings);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// Update a setting
+export const updateSetting = async (req, res) => {
+    try {
+        const { key, value } = req.body;
+        let setting = await Setting.findOneAndUpdate(
+            { key },
+            { value },
+            { new: true, upsert: true }
+        );
+        res.status(200).json(setting);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

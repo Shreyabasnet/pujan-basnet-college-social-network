@@ -49,13 +49,39 @@ export const useTeacher = () => {
         }
     };
 
-    // Add more methods as needed
+    const getAssignments = async (courseId) => {
+        setLoading(true);
+        try {
+            const response = await teacherService.getAssignments(courseId);
+            return response.data.data;
+        } catch (err) {
+            setError(err.response?.data?.message || 'Error fetching assignments');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const createAssignment = async (assignmentData) => {
+        setLoading(true);
+        try {
+            const response = await teacherService.createAssignment(assignmentData);
+            return response.data;
+        } catch (err) {
+            setError(err.response?.data?.message || 'Error creating assignment');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return {
         loading,
         error,
         getDashboardData,
         getMyCourses,
-        markAttendance
+        markAttendance,
+        getAssignments,
+        createAssignment
     };
 };

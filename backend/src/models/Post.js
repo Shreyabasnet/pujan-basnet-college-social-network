@@ -14,6 +14,19 @@ const postSchema = new mongoose.Schema({
         type: String, // Path to the uploaded image
         default: '',
     },
+    fileUrl: {
+        type: String,
+        default: '',
+    },
+    fileName: {
+        type: String,
+        default: '',
+    },
+    isEdited: {
+        type: Boolean,
+        default: false,
+    },
+
     likes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

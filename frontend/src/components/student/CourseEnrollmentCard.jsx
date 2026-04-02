@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CourseEnrollmentCard = ({ course }) => {
+    const navigate = useNavigate();
     if (!course) return null;
 
     return (
@@ -43,7 +45,10 @@ const CourseEnrollmentCard = ({ course }) => {
                 </div>
             </div>
 
-            <button className="w-full py-2 bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors">
+            <button 
+                onClick={() => navigate('/student/courses')}
+                className="w-full py-2 bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+            >
                 Go to Course
             </button>
         </div>

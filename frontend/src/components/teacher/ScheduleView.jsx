@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const ScheduleView = ({ schedule = [] }) => {
     return (
@@ -30,9 +31,12 @@ const ScheduleView = ({ schedule = [] }) => {
                 )}
             </div>
 
-            <button className="w-full mt-6 text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors">
+            <Link
+                to="/teacher/schedule"
+                className="block text-center w-full mt-6 text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
+            >
                 View Full Calendar →
-            </button>
+            </Link>
         </div>
     );
 };

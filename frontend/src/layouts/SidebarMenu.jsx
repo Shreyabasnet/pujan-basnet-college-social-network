@@ -73,11 +73,6 @@ export const studentMenuItems = [
         icon: 'star'
     },
     {
-        title: 'Attendance',
-        path: '/student/attendance',
-        icon: 'check-circle'
-    },
-    {
         title: 'Timetable',
         path: '/student/timetable',
         icon: 'calendar'

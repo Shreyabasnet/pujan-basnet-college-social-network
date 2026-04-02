@@ -1,27 +1,52 @@
 import Post from '../models/Post.js';
 import Notification from '../models/Notification.js';
 import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
+import fs from 'fs';
+import path from 'path';
+
 
 export const createPost = async (req, res) => {
     try {
         const { text } = req.body;
         let image = '';
+        let fileUrl = '';
+        let fileName = '';
 
-        if (req.file) {
+        // Handle Image upload (to Cloudinary)
+        if (req.files && req.files.image && req.files.image[0]) {
             try {
-                const result = await uploadToCloudinary(req.file.buffer, 'collegesocial/posts');
+                const result = await uploadToCloudinary(req.files.image[0].buffer, 'collegesocial/posts');
                 image = result.url;
             } catch (uploadError) {
                 console.error('Cloudinary upload failed:', uploadError);
-                return res.status(500).json({ message: 'Image upload failed' });
             }
+        }
+
+        // Handle PDF upload (Locally)
+        if (req.files && req.files.file && req.files.file[0]) {
+            const pdfFile = req.files.file[0];
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const savedName = pdfFile.fieldname + '-' + uniqueSuffix + path.extname(pdfFile.originalname);
+            const uploadPath = path.join('uploads', 'pdfs', savedName);
+
+            // Ensure directory exists
+            if (!fs.existsSync(path.join('uploads', 'pdfs'))) {
+                fs.mkdirSync(path.join('uploads', 'pdfs'), { recursive: true });
+            }
+
+            fs.writeFileSync(uploadPath, pdfFile.buffer);
+            fileUrl = `/uploads/pdfs/${savedName}`;
+            fileName = pdfFile.originalname;
         }
 
         const newPost = new Post({
             author: req.user.id,
             text,
             image,
+            fileUrl,
+            fileName,
         });
+
 
         await newPost.save();
 
@@ -163,15 +188,37 @@ export const updatePost = async (req, res) => {
         }
 
         // Check user
-        if (post.author.toString() !== req.user.id && req.user.role !== 'ADMIN') {
+        if (post.author.toString() !== req.user.id && req.user.role !== 'Admin') {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
         post.text = text || post.text;
+        post.isEdited = true;
 
-        if (req.file) {
-            const result = await uploadToCloudinary(req.file.buffer, 'collegesocial/posts');
-            post.image = result.url;
+        // Handle Image update
+        if (req.files && req.files.image && req.files.image[0]) {
+            try {
+                const result = await uploadToCloudinary(req.files.image[0].buffer, 'collegesocial/posts');
+                post.image = result.url;
+            } catch (uploadError) {
+                console.error('Cloudinary update failed:', uploadError);
+            }
+        }
+
+        // Handle PDF update
+        if (req.files && req.files.file && req.files.file[0]) {
+            const pdfFile = req.files.file[0];
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const savedName = pdfFile.fieldname + '-' + uniqueSuffix + path.extname(pdfFile.originalname);
+            const uploadPath = path.join('uploads', 'pdfs', savedName);
+
+            if (!fs.existsSync(path.join('uploads', 'pdfs'))) {
+                fs.mkdirSync(path.join('uploads', 'pdfs'), { recursive: true });
+            }
+
+            fs.writeFileSync(uploadPath, pdfFile.buffer);
+            post.fileUrl = `/uploads/pdfs/${savedName}`;
+            post.fileName = pdfFile.originalname;
         }
 
         await post.save();
@@ -182,6 +229,7 @@ export const updatePost = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
 
 export const deleteComment = async (req, res) => {
     try {

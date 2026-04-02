@@ -17,6 +17,10 @@ const adminService = {
 
     // Dashboard
     getDashboardStats: () => api.get('/admin/dashboard/stats'),
+
+    // Settings
+    getSettings: () => api.get('/admin/settings'),
+    updateSetting: (data) => api.put('/admin/settings', data),
 };
 
 export default adminService;

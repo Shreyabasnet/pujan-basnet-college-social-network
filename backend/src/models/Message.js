@@ -19,6 +19,15 @@ const messageSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    fileUrl: {
+        type: String,
+        default: '',
+    },
+    fileName: {
+        type: String,
+        default: '',
+    },
+
 }, { timestamps: true });
 
 const Message = mongoose.model('Message', messageSchema);

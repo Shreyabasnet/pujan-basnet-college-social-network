@@ -17,20 +17,21 @@ const GradeView = ({ grades = [] }) => {
                         grades.map((grade, index) => (
                             <tr key={index} className="hover:bg-gray-50 transition-colors">
                                 <td className="px-4 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-gray-900">{grade.courseName}</div>
-                                    <div className="text-xs text-gray-500">{grade.courseCode}</div>
+                                    <div className="text-sm font-medium text-gray-900">{grade.course?.name || 'N/A'}</div>
+                                    <div className="text-xs text-gray-500">{grade.course?.code || ''}</div>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-600">{grade.assessmentName}</div>
+                                    <div className="text-sm text-gray-600">{grade.assignment}</div>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap">
-                                    <span className="text-lg font-bold text-indigo-600">{grade.score}</span>
-                                    <span className="text-xs text-gray-400 ml-1">/{grade.total}</span>
+                                    <span className="text-lg font-bold text-indigo-600">{grade.grade}</span>
+                                    <span className="text-xs text-gray-400 ml-1">/{grade.maxGrade}</span>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap">
-                                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${grade.passed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }`}>
-                                        {grade.passed ? 'Passed' : 'Failed'}
+                                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                        grade.grade >= (grade.maxGrade / 2) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
+                                        {grade.grade >= (grade.maxGrade / 2) ? 'Passed' : 'Failed'}
                                     </span>
                                 </td>
                             </tr>

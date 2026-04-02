@@ -109,6 +109,32 @@ export const useAdmin = () => {
         }
     }, []);
 
+    const getSettings = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await adminService.getSettings();
+            return response.data;
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to fetch settings');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const updateSetting = useCallback(async (data) => {
+        setLoading(true);
+        try {
+            const response = await adminService.updateSetting(data);
+            return response.data;
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update setting');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return {
         loading,
         error,
@@ -119,6 +145,8 @@ export const useAdmin = () => {
         createCourse,
         updateCourse,
         deleteCourse,
-        getDashboardStats
+        getDashboardStats,
+        getSettings,
+        updateSetting
     };
 };

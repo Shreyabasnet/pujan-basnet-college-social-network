@@ -1,15 +1,42 @@
 import User from '../models/User.js';
 import Course from '../models/Course.js';
 import Event from '../models/Event.js';
+import Grade from '../models/Grade.js';
+import Attendance from '../models/Attendance.js';
 
 // Get student dashboard
 export const getStudentDashboard = async (req, res) => {
     try {
         const studentId = req.user.id;
 
-        // Get enrolled courses
-        const myCourses = await Course.find({ students: studentId })
-            .populate('teacher', 'username email');
+        // Get enrolled courses + department courses
+        const currentUser = await User.findById(studentId);
+        console.log(`Checking courses for student ${studentId}, department: "${currentUser?.department}"`);
+        
+        const query = {
+            $or: [{ students: studentId }]
+        };
+
+        if (currentUser.department) {
+            query.$or.push({ 
+                department: { $regex: new RegExp(`^${currentUser.department.trim()}$`, 'i') } 
+            });
+        }
+
+        const myCourses = await Course.find(query).populate('teacher', 'username email');
+
+        // Get recent grades
+        const recentGrades = await Grade.find({ student: studentId })
+            .sort({ createdAt: -1 })
+            .limit(3)
+            .populate('course', 'name code');
+
+        // Get attendance summary
+        const allAttendance = await Attendance.find({ student: studentId });
+        const presentCount = allAttendance.filter(a => a.status === 'present').length;
+        const attendancePercentage = allAttendance.length > 0
+            ? Math.round((presentCount / allAttendance.length) * 100)
+            : 0;
 
         // Get upcoming events
         const upcomingEvents = await Event.find({
@@ -42,8 +69,20 @@ export const getStudentDashboard = async (req, res) => {
 export const getMyCourses = async (req, res) => {
     try {
 
-        const courses = await Course.find({ students: req.user.id })
-            .populate('teacher', 'username email');
+        const currentUser = await User.findById(req.user.id);
+        console.log(`Getting courses for student ${req.user.id}, department: "${currentUser?.department}"`);
+
+        const query = {
+            $or: [{ students: req.user.id }]
+        };
+
+        if (currentUser.department) {
+            query.$or.push({ 
+                department: { $regex: new RegExp(`^${currentUser.department.trim()}$`, 'i') } 
+            });
+        }
+
+        const courses = await Course.find(query).populate('teacher', 'username email');
 
         res.json({
             success: true,

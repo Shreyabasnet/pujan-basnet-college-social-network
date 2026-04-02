@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CourseCard = ({ course }) => {
+    const navigate = useNavigate();
     if (!course) return null;
 
     return (
@@ -38,7 +40,10 @@ const CourseCard = ({ course }) => {
 
                 <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-500">Progress: {course.progress || 0}%</span>
-                    <button className="text-indigo-600 font-semibold hover:text-indigo-800">
+                    <button 
+                        onClick={() => navigate(`/teacher/courses/${course._id}`)}
+                        className="text-indigo-600 font-semibold hover:text-indigo-800"
+                    >
                         View Details →
                     </button>
                 </div>

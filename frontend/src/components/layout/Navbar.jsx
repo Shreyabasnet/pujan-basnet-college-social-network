@@ -52,7 +52,10 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
-                        <Link to="/" className="flex-shrink-0 flex items-center">
+                        <Link 
+                            to={user ? (user.role === 'ADMIN' ? '/admin/dashboard' : user.role === 'TEACHER' ? '/teacher/dashboard' : '/student/dashboard') : "/"} 
+                            className="flex-shrink-0 flex items-center"
+                        >
                             <div className="h-8 w-8 bg-primary-600 rounded-lg flex items-center justify-center mr-2">
                                 <span className="text-white font-bold text-lg">C</span>
                             </div>
@@ -108,11 +111,7 @@ const Navbar = () => {
                                     />
                                     <span className="font-medium hidden sm:block">{user.username}</span>
                                 </Link>
-                                <div className="text-sm">
-                                    <Link to="/forgot-password" title="Go to Forgot Password Page" className="font-medium text-primary-600 hover:text-primary-500">
-                                        Forgot password?
-                                    </Link>
-                                </div>
+
                                 <button
                                     onClick={logout}
                                     className="text-gray-500 hover:text-red-600 font-medium transition"
