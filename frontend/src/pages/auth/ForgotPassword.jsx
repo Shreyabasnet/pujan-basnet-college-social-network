@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, ArrowLeft, Key } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast, { Toaster } from 'react-hot-toast';
@@ -8,6 +8,7 @@ const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const navigate = useNavigate();
     const { forgotPassword } = useAuth();
 
     const handleSubmit = async (e) => {
@@ -15,8 +16,9 @@ const ForgotPassword = () => {
         setLoading(true);
         try {
             await forgotPassword(email);
-            setSubmitted(true);
-            toast.success('Reset link sent to your email!');
+            toast.success('OTP sent to your email!');
+            // Redirect to OTP-based reset page with email pre-filled
+            navigate(`/reset-password-otp?email=${encodeURIComponent(email)}`);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Something went wrong');
         } finally {
@@ -25,6 +27,7 @@ const ForgotPassword = () => {
     };
 
     if (submitted) {
+        // If submitted, user is redirected to OTP page; keep the old UI for compatibility
         return (
             <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg text-center">
@@ -33,7 +36,7 @@ const ForgotPassword = () => {
                     </div>
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Check your email</h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        We've sent a password reset link to <span className="font-medium text-gray-900">{email}</span>.
+                        We've sent an OTP to <span className="font-medium text-gray-900">{email}</span>. Use it to reset your password.
                     </p>
                     <div className="mt-8">
                         <Link to="/login" className="text-primary-600 hover:text-primary-500 font-medium flex items-center justify-center">

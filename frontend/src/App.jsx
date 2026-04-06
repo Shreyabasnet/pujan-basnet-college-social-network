@@ -13,6 +13,7 @@ import SearchPage from './pages/common/SearchPage';
 import NotificationPage from './pages/common/NotificationPage';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import ResetPasswordOtp from './pages/auth/ResetPasswordOtp';
 
 // Student Pages
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -58,6 +59,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/reset-password-otp" element={<ResetPasswordOtp />} />
 
             {/* Protected Common Routes */}
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

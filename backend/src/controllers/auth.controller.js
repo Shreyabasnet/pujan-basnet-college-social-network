@@ -1,8 +1,8 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { generateResetToken, sendResetEmail } from '../utils/email.js';
 import crypto from "crypto";
+import sendMail from '../utils/mailer.js';
 
 export const register = async (req, res) => {
     try {
@@ -112,23 +112,29 @@ export const forgotPassword = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Generate token
-        const resetToken = generateResetToken();
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Hash token before saving
+        // Hash OTP before saving for security
         user.resetPasswordToken = crypto
             .createHash("sha256")
-            .update(resetToken)
+            .update(otp)
             .digest("hex");
 
-        user.resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+        // Short expiry for OTP
+        user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
 
         await user.save();
 
-        await sendResetEmail(email, resetToken);
+        // Send OTP via email
+        await sendMail({
+            to: email,
+            subject: 'Password Reset OTP',
+            html: `<p>Your password reset OTP is <strong>${otp}</strong>. It is valid for 15 minutes.</p>`
+        });
 
         res.status(200).json({
-            message: "Password reset link sent to your email",
+            message: "OTP sent to your email",
         });
 
     } catch (error) {
@@ -171,6 +177,57 @@ export const resetPassword = async (req, res) => {
 
         // Update password
         user.password = hashedPassword; // make sure you hash in model middleware!
+
+        // Clear reset fields
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Password reset successful",
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error",
+            error: error.message,
+        });
+    }
+};
+
+export const resetPasswordWithOtp = async (req, res) => {
+    try {
+        const { email, otp, password } = req.body;
+
+        if (!email || !otp || !password) {
+            return res.status(400).json({ message: "Email, OTP and new password are required" });
+        }
+
+        // Hash incoming OTP
+        const hashedOtp = crypto
+            .createHash("sha256")
+            .update(otp)
+            .digest("hex");
+
+        // Find user with valid OTP
+        const user = await User.findOne({
+            email,
+            resetPasswordToken: hashedOtp,
+            resetPasswordExpire: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid or expired OTP",
+            });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Update password
+        user.password = hashedPassword;
 
         // Clear reset fields
         user.resetPasswordToken = undefined;
