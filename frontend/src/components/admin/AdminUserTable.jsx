@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit2 } from 'lucide-react';
 
-const AdminUserTable = ({ data, activeTab, handleDelete, loading }) => {
+const AdminUserTable = ({ data, activeTab, handleDelete, handleEdit, loading }) => {
     return (
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
             <table className="w-full text-left">
@@ -28,9 +28,14 @@ const AdminUserTable = ({ data, activeTab, handleDelete, loading }) => {
                                 <div className="text-gray-600">{item.email}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                                <button onClick={() => handleDelete(item._id)} className="text-red-600 hover:text-red-800 transition">
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex gap-3 justify-end">
+                                    <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-800 transition" title="Edit">
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleDelete(item._id)} className="text-red-600 hover:text-red-800 transition" title="Delete">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}

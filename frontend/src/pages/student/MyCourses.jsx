@@ -20,8 +20,9 @@ const MyCourses = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">My Enrolled Courses</h1>
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white">
+                <h1 className="text-3xl font-bold">My Enrolled Courses</h1>
+                <p className="mt-2 text-blue-100">View your active subjects and attendance progress</p>
             </div>
 
             {error && (

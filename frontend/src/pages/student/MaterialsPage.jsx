@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useStudent } from '../../hooks/useStudent';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { FileText, Download } from 'lucide-react';
+import { API_BASE_URL } from '../../config/constants';
 
 const MaterialsPage = () => {
     const { getMaterials, loading, error } = useStudent();
     const [materials, setMaterials] = useState([]);
+    const backendBaseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
 
     useEffect(() => {
         fetchMaterials();
@@ -20,7 +22,10 @@ const MaterialsPage = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Study Materials</h1>
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white">
+                <h1 className="text-3xl font-bold">Study Materials</h1>
+                <p className="mt-2 text-blue-100">Browse notes, slides, and class resources</p>
+            </div>
             
             {error && (
                 <div className="bg-red-50 text-red-600 p-4 rounded-lg">
@@ -45,12 +50,20 @@ const MaterialsPage = () => {
                                 </div>
                                 <p className="text-gray-600 text-sm mb-4">{material.description}</p>
                                 <div className="text-xs text-gray-400">
-                                    Course: {material.course?.title}
+                                    Course: {material.course?.name || material.course?.title || 'N/A'}
                                 </div>
                             </div>
-                            <button className="mt-6 flex items-center justify-center space-x-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-lg transition border border-gray-200">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!material.fileUrl) return;
+                                    window.open(`${backendBaseUrl}${material.fileUrl}`, '_blank', 'noopener,noreferrer');
+                                }}
+                                disabled={!material.fileUrl}
+                                className="mt-6 flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-2 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
                                 <Download className="h-4 w-4" />
-                                <span>Download</span>
+                                <span>{material.fileUrl ? 'Download' : 'Unavailable'}</span>
                             </button>
                         </div>
                     ))

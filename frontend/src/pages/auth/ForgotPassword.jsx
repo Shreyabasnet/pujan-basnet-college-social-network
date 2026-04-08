@@ -13,6 +13,7 @@ const ForgotPassword = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (loading) return;
         setLoading(true);
         try {
             await forgotPassword(email);
@@ -20,7 +21,10 @@ const ForgotPassword = () => {
             // Redirect to OTP-based reset page with email pre-filled
             navigate(`/reset-password-otp?email=${encodeURIComponent(email)}`);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Something went wrong');
+            toast.error(
+                error.response?.data?.message || 'Unable to connect to the server. Please try again.',
+                { id: 'forgot-password-error' }
+            );
         } finally {
             setLoading(false);
         }

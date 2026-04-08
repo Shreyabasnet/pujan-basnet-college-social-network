@@ -20,7 +20,10 @@ const TimetablePage = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Weekly Timetable</h1>
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white">
+                <h1 className="text-3xl font-bold">Weekly Timetable</h1>
+                <p className="mt-2 text-blue-100">Check your daily class schedule and stay on track</p>
+            </div>
             
             {error && (
                 <div className="bg-red-50 text-red-600 p-4 rounded-lg">

@@ -44,8 +44,7 @@ export const teacherMenuItems = [
     {
         title: 'Messages',
         path: '/teacher/messages',
-        icon: 'message',
-        badge: 3 // Unread messages
+        icon: 'message'
     },
     {
         title: 'Profile',
@@ -90,8 +89,7 @@ export const studentMenuItems = [
     {
         title: 'Notifications',
         path: '/student/notifications',
-        icon: 'bell',
-        badge: 5
+        icon: 'bell'
     },
     {
         title: 'Messages',

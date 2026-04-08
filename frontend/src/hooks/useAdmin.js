@@ -44,6 +44,19 @@ export const useAdmin = () => {
         }
     }, []);
 
+    const updateUser = useCallback(async (id, data) => {
+        setLoading(true);
+        try {
+            const response = await adminService.updateTeacher(id, data);
+            return response.data;
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update user');
+            return null;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     const getCourses = useCallback(async () => {
         setLoading(true);
         try {
@@ -141,6 +154,7 @@ export const useAdmin = () => {
         getTeachers,
         getStudents,
         deleteUser,
+        updateUser,
         getCourses,
         createCourse,
         updateCourse,

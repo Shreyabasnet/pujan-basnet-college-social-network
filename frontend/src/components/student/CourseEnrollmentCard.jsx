@@ -46,8 +46,8 @@ const CourseEnrollmentCard = ({ course }) => {
             </div>
 
             <button 
-                onClick={() => navigate('/student/courses')}
-                className="w-full py-2 bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                onClick={() => navigate(`/student/courses/${course._id}`, { state: { course } })}
+                className="w-full py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-sm font-semibold rounded-lg transition"
             >
                 Go to Course
             </button>

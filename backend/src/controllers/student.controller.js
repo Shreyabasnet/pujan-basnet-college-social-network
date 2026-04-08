@@ -3,6 +3,8 @@ import Course from '../models/Course.js';
 import Event from '../models/Event.js';
 import Grade from '../models/Grade.js';
 import Attendance from '../models/Attendance.js';
+import Material from '../models/Material.js';
+import Assignment from '../models/Assignment.js';
 
 // Get student dashboard
 export const getStudentDashboard = async (req, res) => {
@@ -136,5 +138,107 @@ export const getMyTimetable = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// Get study materials for student's enrolled/department courses
+export const getMyMaterials = async (req, res) => {
+    try {
+        const currentUser = await User.findById(req.user.id);
+
+        const courseQuery = {
+            $or: [{ students: req.user.id }]
+        };
+
+        if (currentUser?.department) {
+            courseQuery.$or.push({
+                department: { $regex: new RegExp(`^${currentUser.department.trim()}$`, 'i') }
+            });
+        }
+
+        const courses = await Course.find(courseQuery).select('_id');
+        const courseIds = courses.map(course => course._id);
+
+        const materials = await Material.find({ course: { $in: courseIds } })
+            .populate('course', 'name code')
+            .populate('teacher', 'username')
+            .sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            data: materials
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get downloadable material URL if material belongs to student's course list
+export const downloadMaterial = async (req, res) => {
+    try {
+        const { materialId } = req.params;
+
+        const currentUser = await User.findById(req.user.id);
+        const courseQuery = {
+            $or: [{ students: req.user.id }]
+        };
+
+        if (currentUser?.department) {
+            courseQuery.$or.push({
+                department: { $regex: new RegExp(`^${currentUser.department.trim()}$`, 'i') }
+            });
+        }
+
+        const courses = await Course.find(courseQuery).select('_id');
+        const courseIds = courses.map(course => course._id.toString());
+
+        const material = await Material.findById(materialId).populate('course', 'name code');
+
+        if (!material || !courseIds.includes(material.course?._id?.toString())) {
+            return res.status(404).json({ message: 'Material not found' });
+        }
+
+        return res.json({
+            success: true,
+            data: {
+                fileUrl: material.fileUrl,
+                title: material.title,
+                fileType: material.fileType
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+// Get assignments for student's enrolled/department courses
+export const getMyAssignments = async (req, res) => {
+    try {
+        const currentUser = await User.findById(req.user.id);
+
+        const courseQuery = {
+            $or: [{ students: req.user.id }]
+        };
+
+        if (currentUser?.department) {
+            courseQuery.$or.push({
+                department: { $regex: new RegExp(`^${currentUser.department.trim()}$`, 'i') }
+            });
+        }
+
+        const courses = await Course.find(courseQuery).select('_id');
+        const courseIds = courses.map(course => course._id);
+
+        const assignments = await Assignment.find({ course: { $in: courseIds } })
+            .populate('course', 'name code')
+            .populate('teacher', 'username')
+            .sort({ dueDate: 1 });
+
+        return res.json({
+            success: true,
+            data: assignments
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
 };

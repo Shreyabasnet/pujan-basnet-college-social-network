@@ -6,7 +6,10 @@ import {
     getMyCourses,
     getMyGrades,
     getMyAttendance,
-    getMyTimetable
+    getMyTimetable,
+    getMyMaterials,
+    downloadMaterial,
+    getMyAssignments
 } from '../controllers/student.controller.js';
 
 const router = express.Router();
@@ -25,5 +28,12 @@ router.get('/courses', getMyCourses);
 router.get('/grades', getMyGrades);
 router.get('/attendance', getMyAttendance);
 router.get('/timetable', getMyTimetable);
+
+// Materials
+router.get('/materials', getMyMaterials);
+router.get('/materials/:materialId/download', downloadMaterial);
+
+// Assignments
+router.get('/assignments', getMyAssignments);
 
 export default router;

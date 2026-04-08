@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTeacher } from '../../hooks/useTeacher';
 import CourseCard from '../../components/teacher/CourseCard';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Alert from '../../components/common/Alert';
-import { BookOpen, Search, Filter } from 'lucide-react';
+import { BookOpen, Search, Filter, ArrowLeft, Users, Clock } from 'lucide-react';
 
 const CoursesPage = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const { getMyCourses, loading, error } = useTeacher();
     const [courses, setCourses] = useState([]);
+    const [selectedCourse, setSelectedCourse] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
         fetchCourses();
@@ -18,6 +23,10 @@ const CoursesPage = () => {
         try {
             const data = await getMyCourses();
             setCourses(data);
+            if (id) {
+                const course = data.find(c => c._id === id);
+                setSelectedCourse(course);
+            }
         } catch (err) {
             console.error(err);
         }
@@ -29,6 +38,121 @@ const CoursesPage = () => {
     );
 
     if (loading && courses.length === 0) return <LoadingSpinner />;
+
+    // Course Details View
+    if (id && selectedCourse) {
+        return (
+            <div className="p-6 bg-gray-50 min-h-screen">
+                <div className="max-w-5xl mx-auto space-y-6">
+                    <button 
+                        onClick={() => navigate('/teacher/courses')}
+                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                        <ArrowLeft className="h-5 w-5" />
+                        Back to Courses
+                    </button>
+
+                    <div className="flex items-center space-x-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">{selectedCourse.name}</h1>
+                            <p className="text-gray-500 mt-1">{selectedCourse.code}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-8 text-white">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-bold mb-2">{selectedCourse.name}</h2>
+                                <p className="text-blue-100">{selectedCourse.description || 'Course information'}</p>
+                            </div>
+                            <div className="bg-white/20 rounded-lg p-4 text-center">
+                                <p className="text-xs text-blue-100 mb-1">Students</p>
+                                <p className="text-3xl font-bold">{selectedCourse.studentsEnrolled || 0}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 text-sm">Code</p>
+                                    <p className="text-gray-900 font-semibold mt-1">{selectedCourse.code}</p>
+                                </div>
+                                <BookOpen className="h-8 w-8 text-blue-500" />
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 text-sm">Students</p>
+                                    <p className="text-gray-900 font-semibold mt-1">{selectedCourse.studentsEnrolled || 0}</p>
+                                </div>
+                                <Users className="h-8 w-8 text-purple-500" />
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 text-sm">Credits</p>
+                                    <p className="text-gray-900 font-semibold mt-1">{selectedCourse.credits || 'N/A'}</p>
+                                </div>
+                                <Clock className="h-8 w-8 text-green-500" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow">
+                        <div className="border-b border-gray-200 flex">
+                            {['overview', 'schedule', 'students'].map(tab => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`px-6 py-4 font-medium text-sm transition-colors ${
+                                        activeTab === tab
+                                            ? 'border-b-2 border-blue-500 text-blue-600'
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                >
+                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="p-6">
+                            {activeTab === 'overview' && (
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-900">About this Course</h3>
+                                    <p className="text-gray-600">{selectedCourse.description || 'No description available'}</p>
+                                    <div className="grid grid-cols-2 gap-4 mt-6">
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <p className="text-sm text-gray-600">Department</p>
+                                            <p className="font-semibold text-gray-900 mt-1">{selectedCourse.department || 'N/A'}</p>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-lg p-4">
+                                            <p className="text-sm text-gray-600">Semester</p>
+                                            <p className="font-semibold text-gray-900 mt-1">{selectedCourse.semester || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {activeTab === 'schedule' && (
+                                <div className="text-center py-12">
+                                    <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                    <p className="text-gray-500">Schedule not configured yet</p>
+                                </div>
+                            )}
+                            {activeTab === 'students' && (
+                                <div className="text-center py-12">
+                                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                    <p className="text-gray-500">{selectedCourse.studentsEnrolled > 0 ? `${selectedCourse.studentsEnrolled} student(s) enrolled` : 'No students enrolled'}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 bg-gray-50 min-h-screen">

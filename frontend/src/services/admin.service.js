@@ -4,10 +4,12 @@ const adminService = {
     // Teacher Management
     getTeachers: () => api.get('/admin/teachers'),
     deleteTeacher: (id) => api.delete(`/admin/user/${id}`),
+    updateTeacher: (id, data) => api.put(`/admin/user/${id}`, data),
 
     // Student Management
     getStudents: () => api.get('/admin/students'),
     deleteStudent: (id) => api.delete(`/admin/user/${id}`),
+    updateStudent: (id, data) => api.put(`/admin/user/${id}`, data),
 
     // Course Management
     getCourses: () => api.get('/admin/courses'),

@@ -20,7 +20,10 @@ const AssignmentsPage = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white">
+                <h1 className="text-3xl font-bold">Assignments</h1>
+                <p className="mt-2 text-blue-100">Track pending work and deadlines</p>
+            </div>
             
             {error && (
                 <div className="bg-red-50 text-red-600 p-4 rounded-lg">
@@ -39,7 +42,7 @@ const AssignmentsPage = () => {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <div className="flex items-center space-x-2 mb-2">
-                                        <ClipboardList className="h-5 w-5 text-primary-600" />
+                                        <ClipboardList className="h-5 w-5 text-blue-600" />
                                         <h3 className="text-lg font-bold">{assignment.title}</h3>
                                     </div>
                                     <p className="text-gray-600 mb-4">{assignment.description}</p>
@@ -49,11 +52,11 @@ const AssignmentsPage = () => {
                                             Due: {new Date(assignment.dueDate).toLocaleDateString()}
                                         </span>
                                         <span className="text-gray-500">
-                                            Course: {assignment.course?.title}
+                                            Course: {assignment.course?.name || assignment.course?.title || 'N/A'}
                                         </span>
                                     </div>
                                 </div>
-                                <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition">
+                                <button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition">
                                     Submit
                                 </button>
                             </div>

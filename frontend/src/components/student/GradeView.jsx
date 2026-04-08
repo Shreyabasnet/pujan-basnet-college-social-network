@@ -24,7 +24,7 @@ const GradeView = ({ grades = [] }) => {
                                     <div className="text-sm text-gray-600">{grade.assignment}</div>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap">
-                                    <span className="text-lg font-bold text-indigo-600">{grade.grade}</span>
+                                    <span className="text-lg font-bold text-blue-600">{grade.grade}</span>
                                     <span className="text-xs text-gray-400 ml-1">/{grade.maxGrade}</span>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap">

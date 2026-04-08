@@ -18,6 +18,7 @@ import ResetPasswordOtp from './pages/auth/ResetPasswordOtp';
 // Student Pages
 import StudentDashboard from './pages/student/StudentDashboard';
 import MyCourses from './pages/student/MyCourses';
+import CourseDetailsPage from './pages/student/CourseDetailsPage';
 import StudentGrades from './pages/student/GradesPage';
 import StudentAttendance from './pages/student/AttendancePage';
 import TimetablePage from './pages/student/TimetablePage';
@@ -74,6 +75,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['STUDENT']}><StudentLayout /></ProtectedRoute>}>
               <Route path="/student/dashboard" element={<StudentDashboard />} />
               <Route path="/student/courses" element={<MyCourses />} />
+              <Route path="/student/courses/:courseId" element={<CourseDetailsPage />} />
               <Route path="/student/grades" element={<StudentGrades />} />
               <Route path="/student/attendance" element={<StudentAttendance />} />
               <Route path="/student/timetable" element={<TimetablePage />} />
