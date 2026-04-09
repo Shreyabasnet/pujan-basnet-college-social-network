@@ -1,21 +1,49 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { useEffect } from 'react';
+import studentService from '../../services/student.service';
 
 const Timetable = ({ classes = [], compact = false }) => {
     const [showModal, setShowModal] = useState(false);
     const [reminders, setReminders] = useState([]);
     const [formData, setFormData] = useState({ title: '', date: '', time: '', description: '' });
 
-    const handleAddReminder = () => {
+    useEffect(() => {
+        const fetchReminders = async () => {
+            try {
+                const res = await studentService.getReminders();
+                setReminders(res.data?.data || []);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchReminders();
+    }, []);
+
+    const handleAddReminder = async () => {
         if (formData.title.trim() && formData.date && formData.time) {
-            setReminders([...reminders, { id: Date.now(), ...formData }]);
-            setFormData({ title: '', date: '', time: '', description: '' });
-            setShowModal(false);
+            try {
+                const res = await studentService.createReminder(formData);
+                const newReminder = res.data?.data;
+                if (newReminder) {
+                    setReminders((prev) => [newReminder, ...prev]);
+                }
+                setFormData({ title: '', date: '', time: '', description: '' });
+                setShowModal(false);
+            } catch (error) {
+                console.error(error);
+            }
         }
     };
 
-    const handleDeleteReminder = (id) => {
-        setReminders(reminders.filter(r => r.id !== id));
+    const handleDeleteReminder = async (id) => {
+        try {
+            await studentService.deleteReminder(id);
+            setReminders(reminders.filter(r => r._id !== id));
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleFormChange = (e) => {
@@ -63,7 +91,7 @@ const Timetable = ({ classes = [], compact = false }) => {
                 <div className="space-y-3 mt-6 pt-6 border-t border-gray-200">
                     <h3 className="text-sm font-semibold text-gray-700 px-1">Your Reminders</h3>
                     {reminders.map(reminder => (
-                        <div key={reminder.id} className="flex items-start justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div key={reminder._id} className="flex items-start justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
                             <div className="flex-1">
                                 <p className="font-medium text-gray-800 text-sm">{reminder.title}</p>
                                 <p className="text-xs text-gray-500 mt-1">📅 {reminder.date} | ⏰ {reminder.time}</p>
@@ -72,7 +100,7 @@ const Timetable = ({ classes = [], compact = false }) => {
                                 )}
                             </div>
                             <button
-                                onClick={() => handleDeleteReminder(reminder.id)}
+                                onClick={() => handleDeleteReminder(reminder._id)}
                                 className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
                             >
                                 <X className="h-4 w-4" />

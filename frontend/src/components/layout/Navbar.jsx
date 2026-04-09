@@ -12,6 +12,7 @@ const Navbar = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [unreadCount, setUnreadCount] = useState(0);
+    const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
     useEffect(() => {
         if (user) {
@@ -22,8 +23,13 @@ const Navbar = () => {
                 setUnreadCount(prev => prev + 1);
             });
 
+            socket.on("receive_message", () => {
+                setChatUnreadCount(prev => prev + 1);
+            });
+
             // Initial fetch
             fetchUnreadCount();
+            fetchChatUnreadCount();
 
             return () => socket.disconnect();
         }
@@ -34,6 +40,16 @@ const Navbar = () => {
             const res = await api.get('/notifications');
             const unread = res.data.filter(n => !n.isRead).length;
             setUnreadCount(unread);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchChatUnreadCount = async () => {
+        try {
+            const res = await api.get('/messages/conversations');
+            const totalUnread = res.data.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
+            setChatUnreadCount(totalUnread);
         } catch (error) {
             console.error(error);
         }
@@ -91,7 +107,15 @@ const Navbar = () => {
                             </Link>
                         )}
                         <Link to="/events" className="text-gray-600 hover:text-primary-600 font-medium transition">Events</Link>
-                        <Link to="/chat" className="text-gray-600 hover:text-primary-600 font-medium transition">Chat</Link>
+                        <Link to="/announcements" className="text-gray-600 hover:text-primary-600 font-medium transition">Announcements</Link>
+                        <Link to="/chat" className="relative text-gray-600 hover:text-primary-600 font-medium transition">
+                            Chat
+                            {chatUnreadCount > 0 && (
+                                <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] h-4 min-w-4 px-1 flex items-center justify-center rounded-full font-bold">
+                                    {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                                </span>
+                            )}
+                        </Link>
                         {user ? (
                             <div className="flex items-center space-x-4">
                                 <Link to="/notifications" className="relative text-gray-500 hover:text-primary-600 transition">

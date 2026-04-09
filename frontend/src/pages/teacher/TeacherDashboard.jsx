@@ -47,12 +47,6 @@ const TeacherDashboard = () => {
                     >
                         Take Attendance
                     </button>
-                    <button 
-                        onClick={() => navigate('/teacher/assignments')}
-                        className="btn btn-secondary"
-                    >
-                        Create Assignment
-                    </button>
                 </div>
             </div>
 
@@ -117,22 +111,22 @@ const TeacherDashboard = () => {
                                 📝 Mark Attendance
                             </button>
                             <button 
-                                onClick={() => navigate('/teacher/grades')}
+                                onClick={() => navigate('/teacher/courses')}
                                 className="w-full btn btn-outline text-left"
                             >
-                                📊 Update Grades
+                                📚 Manage Courses
                             </button>
                             <button 
-                                onClick={() => navigate('/feed')}
+                                onClick={() => navigate('/announcements')}
                                 className="w-full btn btn-outline text-left"
                             >
                                 📢 Make Announcement
                             </button>
                             <button 
-                                onClick={() => navigate('/teacher/materials')}
+                                onClick={() => navigate('/events')}
                                 className="w-full btn btn-outline text-left"
                             >
-                                📎 Upload Material
+                                📅 Manage Events
                             </button>
                         </div>
                     </div>

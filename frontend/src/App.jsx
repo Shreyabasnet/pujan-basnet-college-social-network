@@ -9,6 +9,7 @@ import ProfilePage from './pages/common/ProfilePage';
 import FeedPage from './pages/common/FeedPage';
 import ChatPage from './pages/common/ChatPage';
 import EventPage from './pages/common/EventPage';
+import AnnouncementPage from './pages/common/AnnouncementPage';
 import SearchPage from './pages/common/SearchPage';
 import NotificationPage from './pages/common/NotificationPage';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -19,20 +20,14 @@ import ResetPasswordOtp from './pages/auth/ResetPasswordOtp';
 import StudentDashboard from './pages/student/StudentDashboard';
 import MyCourses from './pages/student/MyCourses';
 import CourseDetailsPage from './pages/student/CourseDetailsPage';
-import StudentGrades from './pages/student/GradesPage';
 import StudentAttendance from './pages/student/AttendancePage';
 import TimetablePage from './pages/student/TimetablePage';
-import StudentMaterials from './pages/student/MaterialsPage';
-import StudentAssignments from './pages/student/AssignmentsPage';
 
 // Teacher Pages
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherSchedulePage from './pages/teacher/TeacherSchedulePage';
 import CoursesPage from './pages/teacher/CoursesPage';
 import AttendancePage from './pages/teacher/AttendancePage';
-import GradesPage from './pages/teacher/GradesPage';
-import AssignmentsPage from './pages/teacher/AssignmentsPage';
-import MaterialsPage from './pages/teacher/MaterialsPage';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -67,6 +62,7 @@ function App() {
             <Route path="/profile/:id" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
             <Route path="/events" element={<ProtectedRoute><EventPage /></ProtectedRoute>} />
+            <Route path="/announcements" element={<ProtectedRoute><AnnouncementPage /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
             <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
@@ -76,11 +72,8 @@ function App() {
               <Route path="/student/dashboard" element={<StudentDashboard />} />
               <Route path="/student/courses" element={<MyCourses />} />
               <Route path="/student/courses/:courseId" element={<CourseDetailsPage />} />
-              <Route path="/student/grades" element={<StudentGrades />} />
               <Route path="/student/attendance" element={<StudentAttendance />} />
               <Route path="/student/timetable" element={<TimetablePage />} />
-              <Route path="/student/materials" element={<StudentMaterials />} />
-              <Route path="/student/assignments" element={<StudentAssignments />} />
               <Route path="/student/messages" element={<ChatPage />} />
               <Route path="/student/profile" element={<ProfilePage />} />
               <Route path="/student/notifications" element={<NotificationPage />} />
@@ -94,12 +87,6 @@ function App() {
               <Route path="/teacher/courses/:id" element={<CoursesPage />} />
               <Route path="/teacher/attendance" element={<AttendancePage />} />
               <Route path="/teacher/attendance/:courseId" element={<AttendancePage />} />
-              <Route path="/teacher/grades" element={<GradesPage />} />
-              <Route path="/teacher/grades/:courseId" element={<GradesPage />} />
-              <Route path="/teacher/assignments" element={<AssignmentsPage />} />
-              <Route path="/teacher/assignments/:courseId" element={<AssignmentsPage />} />
-              <Route path="/teacher/materials" element={<MaterialsPage />} />
-              <Route path="/teacher/materials/:courseId" element={<MaterialsPage />} />
               <Route path="/teacher/messages" element={<ChatPage />} />
               <Route path="/teacher/profile" element={<ProfilePage />} />
             </Route>

@@ -47,7 +47,7 @@ export const deleteUser = async (req, res) => {
 // Get all courses
 export const getAllCourses = async (req, res) => {
     try {
-        const courses = await Course.find().populate('teacher', 'username');
+        const courses = await Course.find().populate('teacher', 'username').populate('students', 'username email profilePicture department fullName');
         res.status(200).json(courses);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

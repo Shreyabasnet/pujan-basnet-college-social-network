@@ -5,6 +5,7 @@ import Grade from '../models/Grade.js';
 import Attendance from '../models/Attendance.js';
 import Material from '../models/Material.js';
 import Assignment from '../models/Assignment.js';
+import Reminder from '../models/Reminder.js';
 
 // Get student dashboard
 export const getStudentDashboard = async (req, res) => {
@@ -211,7 +212,37 @@ export const downloadMaterial = async (req, res) => {
     }
 };
 
-// Get assignments for student's enrolled/department courses
+// Enroll student in a course
+export const enrollCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const studentId = req.user.id;
+
+        // Check if course exists
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        // Check if already enrolled
+        if (course.students.includes(studentId)) {
+            return res.status(400).json({ message: 'Already enrolled in this course' });
+        }
+
+        // Add student to course
+        course.students.push(studentId);
+        await course.save();
+
+        res.json({
+            success: true,
+            message: 'Successfully enrolled in course',
+            data: course
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const getMyAssignments = async (req, res) => {
     try {
         const currentUser = await User.findById(req.user.id);
@@ -238,6 +269,62 @@ export const getMyAssignments = async (req, res) => {
             success: true,
             data: assignments
         });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const getMyReminders = async (req, res) => {
+    try {
+        const reminders = await Reminder.find({ student: req.user.id }).sort({ createdAt: -1 });
+        return res.json({
+            success: true,
+            data: reminders,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const createReminder = async (req, res) => {
+    try {
+        const { title, date, time, description } = req.body;
+
+        if (!title || !date || !time) {
+            return res.status(400).json({ message: 'Title, date and time are required' });
+        }
+
+        const reminder = await Reminder.create({
+            student: req.user.id,
+            title,
+            date,
+            time,
+            description: description || '',
+        });
+
+        return res.status(201).json({
+            success: true,
+            data: reminder,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const deleteReminder = async (req, res) => {
+    try {
+        const reminder = await Reminder.findById(req.params.reminderId);
+
+        if (!reminder) {
+            return res.status(404).json({ message: 'Reminder not found' });
+        }
+
+        if (reminder.student.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await reminder.deleteOne();
+        return res.json({ success: true, message: 'Reminder deleted' });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

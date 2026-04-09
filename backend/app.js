@@ -11,6 +11,7 @@ import postRoutes from "./src/routes/post.routes.js";
 import eventRoutes from "./src/routes/event.routes.js";
 import messageRoutes from "./src/routes/message.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
+import announcementRoutes from "./src/routes/announcement.routes.js";
 import searchRoutes from "./src/routes/search.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 import teacherRoutes from './src/routes/teacher.routes.js';
@@ -64,6 +65,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/announcements", announcementRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/admin", adminRoutes);
 app.use('/api/teacher', teacherRoutes);
@@ -83,6 +85,14 @@ io.on("connection", (socket) => {
     io.to(receiverId).emit("receive_message", {
       senderId,
       message
+    });
+  });
+
+  socket.on("unsend_message", (data) => {
+    const { receiverId, senderId, messageId } = data;
+    io.to(receiverId).emit("message_unsent", {
+      senderId,
+      messageId,
     });
   });
 

@@ -32,3 +32,14 @@ export const studentOnly = (req, res, next) => {
     }
     next();
 };
+
+// Admin or Teacher access
+export const adminOrTeacher = (req, res, next) => {
+    if (req.user.role !== "ADMIN" && req.user.role !== "TEACHER") {
+        return res.status(403).json({
+            success: false,
+            message: "Access denied. Admin or Teacher only."
+        });
+    }
+    next();
+};

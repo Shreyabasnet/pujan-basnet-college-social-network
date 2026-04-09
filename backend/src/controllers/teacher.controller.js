@@ -13,7 +13,7 @@ export const getTeacherDashboard = async (req, res) => {
         const teacherId = req.user.id;
 
         // 1. Get my courses
-        const myCourses = await Course.find({ teacher: teacherId });
+        const myCourses = await Course.find({ teacher: teacherId }).populate('students', 'username email department');
         const courseIds = myCourses.map(c => c._id);
 
         // 2. Get students in my courses (unique students)
@@ -79,7 +79,7 @@ export const getTeacherDashboard = async (req, res) => {
 // Get teacher courses
 export const getMyCourses = async (req, res) => {
     try {
-        const myCourses = await Course.find({ teacher: req.user.id });
+        const myCourses = await Course.find({ teacher: req.user.id }).populate('students', 'username email profilePicture department fullName');
         res.json({
             success: true,
             data: myCourses

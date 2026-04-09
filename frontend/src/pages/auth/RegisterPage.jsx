@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Building, Calendar, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, Building, Calendar, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -25,6 +25,8 @@ const RegisterPage = () => {
         department: '',
         year: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
 
     const handleChange = (e) => {
@@ -47,8 +49,7 @@ const RegisterPage = () => {
                 department: formData.department,
                 year: formData.year
             });
-            toast.success('Registration Successful! Please login.');
-            navigate('/login');
+            navigate('/login', { state: { accountCreated: true } });
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
             toast.error('Registration failed');
@@ -161,13 +162,20 @@ const RegisterPage = () => {
                             </div>
                             <input
                                 name="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 required
-                                className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                className="appearance-none rounded-lg relative block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={handleChange}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
                     </div>
 
@@ -179,13 +187,20 @@ const RegisterPage = () => {
                             </div>
                             <input
                                 name="confirmPassword"
-                                type="password"
+                                type={showConfirmPassword ? 'text' : 'password'}
                                 required
-                                className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                className="appearance-none rounded-lg relative block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                 placeholder="••••••••"
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                            >
+                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
                     </div>
 

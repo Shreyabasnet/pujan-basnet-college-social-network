@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useStudent } from '../../hooks/useStudent';
-import { ArrowLeft, BookOpen, Users, Clock, MapPin, Award } from 'lucide-react';
+import studentService from '../../services/student.service';
+import { ArrowLeft, BookOpen, Users, Clock, MapPin, Award, Check } from 'lucide-react';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import toast, { Toaster } from 'react-hot-toast';
 
 const CourseDetailsPage = () => {
     const { courseId } = useParams();
@@ -10,13 +12,17 @@ const CourseDetailsPage = () => {
     const navigate = useNavigate();
     const [course, setCourse] = useState(location.state?.course || null);
     const [loading, setLoading] = useState(false);
+    const [enrolling, setEnrolling] = useState(false);
+    const [isEnrolled, setIsEnrolled] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
         if (!course && courseId) {
             fetchCourseDetails();
+        } else if (course) {
+            checkEnrollmentStatus();
         }
-    }, [courseId]);
+    }, [courseId, course]);
 
     const fetchCourseDetails = async () => {
         setLoading(true);
@@ -27,6 +33,31 @@ const CourseDetailsPage = () => {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const checkEnrollmentStatus = async () => {
+        try {
+            const courses = await studentService.getMyCourses();
+            const enrolled = courses.some(c => c._id === course._id);
+            setIsEnrolled(enrolled);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleEnroll = async () => {
+        setEnrolling(true);
+        try {
+            const response = await studentService.enrollCourse(course._id);
+            if (response.data.success || response.data.message) {
+                toast.success('Successfully enrolled in the course!');
+                setIsEnrolled(true);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to enroll in course');
+        } finally {
+            setEnrolling(false);
         }
     };
 
@@ -51,6 +82,7 @@ const CourseDetailsPage = () => {
 
     return (
         <div className="space-y-6">
+            <Toaster position="top-right" />
             {/* Header with Back Button */}
             <div className="flex items-center space-x-4">
                 <button 
@@ -78,6 +110,21 @@ const CourseDetailsPage = () => {
                         <p className="text-3xl font-bold">{course.attendance || 0}%</p>
                     </div>
                 </div>
+                {!isEnrolled && (
+                    <button
+                        onClick={handleEnroll}
+                        disabled={enrolling}
+                        className="mt-4 px-6 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+                    >
+                        {enrolling ? 'Enrolling...' : 'Enroll in Course'}
+                    </button>
+                )}
+                {isEnrolled && (
+                    <div className="mt-4 flex items-center space-x-2 bg-green-400/20 px-4 py-2 rounded-lg w-fit">
+                        <Check className="h-5 w-5 text-green-300" />
+                        <span className="text-green-100 font-semibold">Enrolled</span>
+                    </div>
+                )}
             </div>
 
             {/* Course Info Cards */}

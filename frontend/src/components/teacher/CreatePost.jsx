@@ -24,8 +24,17 @@ const CreatePost = ({ onPostCreated }) => {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-            if (selectedFile.type !== 'application/pdf') {
-                toast.error('Only PDF files are allowed');
+            const allowedMimeTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ];
+
+            const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
+            const allowedExtensions = ['pdf', 'doc', 'docx'];
+
+            if (!allowedMimeTypes.includes(selectedFile.type) || !allowedExtensions.includes(fileExtension)) {
+                toast.error('Only PDF, DOC, and DOCX files are allowed');
                 return;
             }
             setFile(selectedFile);
@@ -136,14 +145,14 @@ const CreatePost = ({ onPostCreated }) => {
                             className="flex items-center text-gray-500 hover:text-primary-600 transition text-sm font-medium"
                         >
                             <File className="h-5 w-5 mr-1" />
-                            PDF
+                            Document
                         </button>
                         <input
                             type="file"
                             ref={fileInputRefPdf}
                             onChange={handleFileChange}
                             className="hidden"
-                            accept=".pdf,application/pdf"
+                            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                         />
                     </div>
                     <button

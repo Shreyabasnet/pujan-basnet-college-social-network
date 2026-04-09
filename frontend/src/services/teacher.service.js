@@ -28,7 +28,8 @@ const teacherService = {
     getMaterials: (courseId) => api.get(`/teacher/materials/${courseId}`),
     
     // Announcements
-    createAnnouncement: (data) => api.post('/teacher/announcements', data),
+    createAnnouncement: (data) => api.post('/announcements', data),
+    getAnnouncements: () => api.get('/announcements'),
     
     // Schedule
     getSchedule: () => api.get('/teacher/schedule'),

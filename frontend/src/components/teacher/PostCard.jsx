@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, MessageSquare, Trash2, Share2, Send, X, File, Download, Edit2, Image as ImageIcon } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 
-const PostCard = ({ post, onDelete }) => {
+const PostCard = ({ post, onDelete, isHighlighted = false }) => {
     const { user } = useAuth();
-    const [likes, setLikes] = useState(post.likes);
-    const [comments, setComments] = useState(post.comments);
+    const [likes, setLikes] = useState(Array.isArray(post.likes) ? post.likes : []);
+    const [comments, setComments] = useState(Array.isArray(post.comments) ? post.comments : []);
     const [showComments, setShowComments] = useState(false);
     const [commentText, setCommentText] = useState('');
 
@@ -19,9 +20,11 @@ const PostCard = ({ post, onDelete }) => {
     const [editFile, setEditFile] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentPost, setCurrentPost] = useState(post);
+    const author = currentPost.author || post.author || {};
+    const authorProfilePath = author?._id ? `/profile/${author._id}` : '/profile';
 
 
-    const isAuthor = user && (user._id === post.author._id || user.id === post.author._id);
+    const isAuthor = user && author._id && (user._id === author._id || user.id === author._id);
     const isLiked = user && (likes.includes(user.id) || likes.includes(user._id));
 
     const formattedDate = new Date(post.createdAt).toLocaleDateString('en-US', {
@@ -86,32 +89,61 @@ const PostCard = ({ post, onDelete }) => {
         }
     };
 
+    const handleShare = async () => {
+        const shareUrl = `${window.location.origin}/feed?post=${currentPost._id}`;
+        const shareText = currentPost.text?.trim() ? currentPost.text.slice(0, 120) : 'Check out this post.';
+
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'Campus Feed Post',
+                    text: shareText,
+                    url: shareUrl,
+                });
+                toast.success('Post shared');
+                return;
+            }
+
+            await navigator.clipboard.writeText(shareUrl);
+            toast.success('Post link copied');
+        } catch (error) {
+            // User-cancel in native share should not show as an error.
+            if (error?.name === 'AbortError') return;
+            toast.error('Unable to share this post');
+        }
+    };
+
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+        <div
+            id={`post-${currentPost._id}`}
+            className={`bg-white rounded-xl shadow-sm border mb-6 overflow-hidden transition ${isHighlighted ? 'border-primary-400 ring-2 ring-primary-100' : 'border-gray-100'}`}
+        >
             <div className="p-4 flex justify-between items-start">
                 <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">
-                        {post.author.profilePicture ? (
-                            <img src={post.author.profilePicture} alt={post.author.username} className="h-full w-full object-cover" />
+                    <Link to={authorProfilePath} className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden block">
+                        {author.profilePicture ? (
+                            <img src={author.profilePicture} alt={author.username || 'Post author'} className="h-full w-full object-cover" />
                         ) : (
                             <div className="h-full w-full flex items-center justify-center bg-primary-100 text-primary-600 font-bold uppercase">
-                                {post.author.username.charAt(0)}
+                                {author.username?.charAt(0) || '?'}
                             </div>
                         )}
-                    </div>
+                    </Link>
                     <div>
                         <div className="flex items-center space-x-2">
-                            <h3 className="font-bold text-gray-900">{currentPost.author.username}</h3>
-                            {currentPost.author.role === 'TEACHER' && (
+                            <Link to={authorProfilePath} className="font-bold text-gray-900 hover:text-primary-600 transition">
+                                {author.username || 'Unknown user'}
+                            </Link>
+                            {author.role === 'TEACHER' && (
                                 <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">Teacher</span>
                             )}
-                            {currentPost.author.role === 'ADMIN' && (
+                            {author.role === 'ADMIN' && (
                                 <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded-full font-medium">Admin</span>
                             )}
                         </div>
                         <p className="text-xs text-gray-500">
-                            {currentPost.author.department} • {formattedDate}
+                            {author.department || 'General'} • {formattedDate}
                             {currentPost.isEdited && <span className="ml-2 italic text-gray-400 font-normal">(Edited)</span>}
                         </p>
                     </div>
@@ -152,14 +184,19 @@ const PostCard = ({ post, onDelete }) => {
                             </label>
                             <label className="flex items-center text-xs text-gray-500 cursor-pointer hover:text-primary-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
                                 <File className="h-4 w-4 mr-1" />
-                                Change PDF
-                                <input type="file" accept=".pdf" className="hidden" onChange={(e) => setEditFile(e.target.files[0])} />
+                                Change Document
+                                <input
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                    className="hidden"
+                                    onChange={(e) => setEditFile(e.target.files[0])}
+                                />
                             </label>
                         </div>
                         {(editImage || editFile) && (
                             <div className="text-[10px] text-primary-600 flex gap-2">
                                 {editImage && <span>Image: {editImage.name}</span>}
-                                {editFile && <span>PDF: {editFile.name}</span>}
+                                {editFile && <span>File: {editFile.name}</span>}
                             </div>
                         )}
                         <div className="flex gap-2 justify-end">
@@ -202,9 +239,9 @@ const PostCard = ({ post, onDelete }) => {
                                 </div>
                                 <div className="overflow-hidden">
                                     <p className="text-sm font-medium text-gray-900 truncate">
-                                        {currentPost.fileName || 'Attached PDF'}
+                                        {currentPost.fileName || 'Attached file'}
                                     </p>
-                                    <p className="text-xs text-gray-500 uppercase">PDF Document</p>
+                                    <p className="text-xs text-gray-500 uppercase">Document</p>
                                 </div>
                             </div>
                             <a
@@ -240,7 +277,10 @@ const PostCard = ({ post, onDelete }) => {
                     <MessageSquare className="h-5 w-5" />
                     <span>{comments.length > 0 ? comments.length : 'Comment'}</span>
                 </button>
-                <button className="flex items-center space-x-2 hover:text-primary-600 transition">
+                <button
+                    onClick={handleShare}
+                    className="flex items-center space-x-2 hover:text-primary-600 transition"
+                >
                     <Share2 className="h-5 w-5" />
                     <span>Share</span>
                 </button>
@@ -272,7 +312,7 @@ const PostCard = ({ post, onDelete }) => {
                         <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
                             {comments.map((comment, index) => (
                                 <div key={comment._id || index} className="flex gap-3">
-                                    <div className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                    <Link to={comment.user?._id ? `/profile/${comment.user._id}` : '/profile'} className="h-8 w-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 block">
                                         {comment.user?.profilePicture ? (
                                             <img src={comment.user.profilePicture} className="h-full w-full object-cover" />
                                         ) : (
@@ -280,10 +320,15 @@ const PostCard = ({ post, onDelete }) => {
                                                 {comment.user?.username?.charAt(0) || '?'}
                                             </div>
                                         )}
-                                    </div>
+                                    </Link>
                                     <div className="flex-1 bg-white p-3 rounded-2xl rounded-tl-none shadow-sm">
                                         <div className="flex justify-between items-start">
-                                            <span className="font-bold text-sm text-gray-900">{comment.user?.username || 'Unknown'}</span>
+                                            <Link
+                                                to={comment.user?._id ? `/profile/${comment.user._id}` : '/profile'}
+                                                className="font-bold text-sm text-gray-900 hover:text-primary-600 transition"
+                                            >
+                                                {comment.user?.username || 'Unknown'}
+                                            </Link>
                                             <span className="text-xs text-gray-400">
                                                 {new Date(comment.createdAt).toLocaleDateString()}
                                             </span>

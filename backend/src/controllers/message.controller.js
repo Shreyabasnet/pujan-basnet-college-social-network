@@ -1,4 +1,5 @@
 import Message from '../models/Message.js';
+import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 
 export const sendMessage = async (req, res) => {
@@ -18,9 +19,30 @@ export const sendMessage = async (req, res) => {
 
         await newMessage.save();
 
-        // Populate for socket emission if needed, but usually raw data is fine
-        // await newMessage.populate('sender', 'username profilePicture');
-        // await newMessage.populate('receiver', 'username profilePicture');
+        await newMessage.populate('sender', 'username profilePicture department role');
+
+        // Create a notification for the receiver when a new message arrives.
+        if (senderId !== receiverId) {
+            const newNotification = new Notification({
+                recipient: receiverId,
+                sender: senderId,
+                type: 'message',
+                relatedId: newMessage._id,
+                text: `${req.user.username} sent you a message.`,
+            });
+            await newNotification.save();
+
+            if (req.io) {
+                req.io.to(receiverId).emit('notification', newNotification);
+            }
+        }
+
+        if (req.io) {
+            req.io.to(receiverId).emit('receive_message', {
+                senderId,
+                message: newMessage,
+            });
+        }
 
         res.status(201).json(newMessage);
     } catch (error) {
@@ -33,10 +55,24 @@ export const getMessages = async (req, res) => {
         const { id: userToChatId } = req.params;
         const senderId = req.user.id;
 
+        await Message.updateMany(
+            {
+                sender: userToChatId,
+                receiver: senderId,
+                isRead: false,
+            },
+            { $set: { isRead: true } }
+        );
+
         const messages = await Message.find({
-            $or: [
-                { sender: senderId, receiver: userToChatId },
-                { sender: userToChatId, receiver: senderId },
+            $and: [
+                {
+                    $or: [
+                        { sender: senderId, receiver: userToChatId },
+                        { sender: userToChatId, receiver: senderId },
+                    ],
+                },
+                { deletedFor: { $ne: senderId } },
             ],
         }).sort({ createdAt: 1 }); // Oldest first for chat history
 
@@ -50,24 +86,69 @@ export const getConversations = async (req, res) => {
     try {
         const currentUserId = req.user.id;
 
-        // Find all messages where current user is sender or receiver
         const messages = await Message.find({
-            $or: [{ sender: currentUserId }, { receiver: currentUserId }]
+            $and: [
+                { $or: [{ sender: currentUserId }, { receiver: currentUserId }] },
+                { deletedFor: { $ne: currentUserId } },
+            ]
+        })
+            .sort({ createdAt: -1 })
+            .select('sender receiver createdAt')
+            .lean();
+
+        const latestByUser = new Map();
+        for (const msg of messages) {
+            const otherUserId = msg.sender.toString() === currentUserId
+                ? msg.receiver.toString()
+                : msg.sender.toString();
+
+            if (!latestByUser.has(otherUserId)) {
+                latestByUser.set(otherUserId, msg.createdAt);
+            }
+        }
+
+        const users = await User.find({ _id: { $ne: currentUserId } })
+            .select('-password')
+            .lean();
+
+        const unreadAgg = await Message.aggregate([
+            {
+                $match: {
+                    receiver: req.user._id,
+                    isRead: false,
+                    deletedFor: { $ne: req.user._id },
+                },
+            },
+            {
+                $group: {
+                    _id: '$sender',
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        const unreadBySender = new Map(
+            unreadAgg.map((item) => [item._id.toString(), item.count])
+        );
+
+        users.sort((a, b) => {
+            const aTime = latestByUser.get(a._id.toString());
+            const bTime = latestByUser.get(b._id.toString());
+
+            if (aTime && bTime) {
+                return new Date(bTime) - new Date(aTime);
+            }
+            if (aTime) return -1;
+            if (bTime) return 1;
+            return a.username.localeCompare(b.username);
         });
 
-        // Extract unique user IDs involved
-        const userIds = new Set();
-        messages.forEach(msg => {
-            if (msg.sender.toString() !== currentUserId) userIds.add(msg.sender.toString());
-            if (msg.receiver.toString() !== currentUserId) userIds.add(msg.receiver.toString());
-        });
+        const usersWithUnread = users.map((u) => ({
+            ...u,
+            unreadCount: unreadBySender.get(u._id.toString()) || 0,
+        }));
 
-        // Allow fetching all users to start new chats too, 
-        // effectively getting a contact list. 
-        // For now, let's just return all users except self to make it easy to start a chat.
-        const users = await User.find({ _id: { $ne: currentUserId } }).select('-password');
-
-        res.json(users);
+        res.json(usersWithUnread);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -75,19 +156,75 @@ export const getConversations = async (req, res) => {
 export const deleteMessage = async (req, res) => {
     try {
         const { id } = req.params;
+        const { scope = 'auto' } = req.query;
         const message = await Message.findById(id);
 
         if (!message) {
             return res.status(404).json({ message: 'Message not found' });
         }
 
-        // Only sender or receiver can delete (or Admin)
-        if (message.sender.toString() !== req.user.id && message.receiver.toString() !== req.user.id && req.user.role !== 'ADMIN') {
+        const currentUserId = req.user.id;
+        const senderId = message.sender.toString();
+        const receiverId = message.receiver.toString();
+        const isAdmin = (req.user.role || '').toUpperCase() === 'ADMIN';
+        const isSender = senderId === currentUserId;
+        const isReceiver = receiverId === currentUserId;
+
+        // Only sender/receiver/admin can act on the message.
+        if (!isSender && !isReceiver && !isAdmin) {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
-        await message.deleteOne();
-        res.json({ message: 'Message removed' });
+        const deleteForCurrentUser = async () => {
+            if (!message.deletedFor.some((userId) => userId.toString() === currentUserId)) {
+                message.deletedFor.push(currentUserId);
+                await message.save();
+            }
+
+            if (req.io) {
+                req.io.to(currentUserId).emit('message_deleted_for_me', {
+                    messageId: id,
+                });
+            }
+
+            return res.json({ message: 'Message deleted for you' });
+        };
+
+        const unsendForEveryone = async () => {
+            await message.deleteOne();
+
+            if (req.io) {
+                req.io.to(receiverId).emit('message_unsent', {
+                    senderId,
+                    messageId: id,
+                });
+
+                req.io.to(senderId).emit('message_unsent', {
+                    senderId,
+                    messageId: id,
+                });
+            }
+
+            return res.json({ message: 'Message unsent for everyone' });
+        };
+
+        if (scope === 'everyone') {
+            if (!isSender && !isAdmin) {
+                return res.status(403).json({ message: 'Only sender can delete for everyone' });
+            }
+            return unsendForEveryone();
+        }
+
+        if (scope === 'me') {
+            return deleteForCurrentUser();
+        }
+
+        // Backward-compatible default behavior.
+        if (isSender || isAdmin) {
+            return unsendForEveryone();
+        }
+
+        return deleteForCurrentUser();
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

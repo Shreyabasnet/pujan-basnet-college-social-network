@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast, { Toaster } from 'react-hot-toast';
 
 const LoginPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login, user, loading } = useAuth();
 
     useEffect(() => {
@@ -16,10 +17,20 @@ const LoginPage = () => {
             navigate(dashboardPath);
         }
     }, [user, loading, navigate]);
+
+    useEffect(() => {
+        if (location.state?.accountCreated) {
+            toast.success('Account created successfully. Please sign in.', {
+                id: 'account-created-success'
+            });
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location, navigate]);
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
 
     const handleChange = (e) => {
@@ -83,13 +94,20 @@ const LoginPage = () => {
                                 </div>
                                 <input
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     required
-                                    className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                                    className="appearance-none rounded-lg relative block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                                     placeholder="••••••••"
                                     value={formData.password}
                                     onChange={handleChange}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Camera, Save, Loader } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import toast, { Toaster } from 'react-hot-toast';
 
 const ProfilePage = () => {
     const { user, loading } = useAuth();
+    const { id } = useParams();
     const fileInputRef = useRef(null);
     const [uploadingPicture, setUploadingPicture] = useState(false);
     const [profile, setProfile] = useState({
@@ -17,16 +19,18 @@ const ProfilePage = () => {
         profilePicture: '',
         role: ''
     });
+    const isOwnProfile = !id || id === user?._id || id === user?.id;
 
     useEffect(() => {
         if (user) {
             fetchProfile();
         }
-    }, [user]);
+    }, [user, id]);
 
     const fetchProfile = async () => {
         try {
-            const res = await api.get('/users/profile');
+            const endpoint = id ? `/users/${id}` : '/users/profile';
+            const res = await api.get(endpoint);
             setProfile({
                 username: res.data.username || '',
                 email: res.data.email || '',
@@ -42,6 +46,12 @@ const ProfilePage = () => {
     };
 
     const [isEditing, setIsEditing] = useState(false);
+
+    useEffect(() => {
+        if (!isOwnProfile) {
+            setIsEditing(false);
+        }
+    }, [isOwnProfile]);
 
     const handleChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -69,6 +79,7 @@ const ProfilePage = () => {
     };
 
     const handleProfilePictureClick = () => {
+        if (!isOwnProfile) return;
         fileInputRef.current?.click();
     };
 
@@ -138,7 +149,7 @@ const ProfilePage = () => {
                             </div>
                             <button 
                                 onClick={handleProfilePictureClick}
-                                disabled={uploadingPicture}
+                                disabled={uploadingPicture || !isOwnProfile}
                                 className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md text-gray-600 hover:text-primary-600 border border-gray-200 transition disabled:opacity-50"
                             >
                                 <Camera className="h-5 w-5" />
@@ -171,9 +182,10 @@ const ProfilePage = () => {
                         </div>
                         <button
                             onClick={() => setIsEditing(!isEditing)}
+                            disabled={!isOwnProfile}
                             className="text-primary-600 hover:text-primary-800 font-medium"
                         >
-                            {isEditing ? 'Cancel' : 'Edit Profile'}
+                            {isOwnProfile ? (isEditing ? 'Cancel' : 'Edit Profile') : 'Profile'}
                         </button>
                     </div>
 

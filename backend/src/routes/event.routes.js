@@ -1,8 +1,8 @@
 import express from 'express';
 import multer from 'multer';
-import { createEvent, getEvents, deleteEvent, updateEvent } from '../controllers/event.controller.js';
+import { createEvent, getEvents, deleteEvent, updateEvent, cancelEvent } from '../controllers/event.controller.js';
 import { protect } from '../middleware/auth.js';
-import { teacherOnly } from '../middleware/roleBasedAuth.js';
+import { adminOrTeacher } from '../middleware/roleBasedAuth.js';
 
 const router = express.Router();
 
@@ -24,9 +24,10 @@ const upload = multer({
     }
 });
 
-router.post('/', protect, teacherOnly, upload.single('image'), createEvent);
+router.post('/', protect, adminOrTeacher, upload.single('image'), createEvent);
 router.get('/', protect, getEvents);
-router.delete('/:id', protect, teacherOnly, deleteEvent);
-router.put('/:id', protect, teacherOnly, upload.single('image'), updateEvent);
+router.delete('/:id', protect, adminOrTeacher, deleteEvent);
+router.put('/:id', protect, adminOrTeacher, upload.single('image'), updateEvent);
+router.patch('/:id/cancel', protect, adminOrTeacher, cancelEvent);
 
 export default router;

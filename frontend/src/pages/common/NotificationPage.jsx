@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { Heart, MessageSquare, Bell } from 'lucide-react';
 
 const NotificationPage = () => {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -14,15 +16,33 @@ const NotificationPage = () => {
         try {
             const res = await api.get('/notifications');
             setNotifications(res.data);
-            // Mark all as read when page loads (only if there are unread notifications)
-            const hasUnread = res.data.some(n => !n.isRead);
-            if (hasUnread) {
-                await api.put('/notifications/read-all');
-            }
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleNotificationClick = async (notif) => {
+        try {
+            if (!notif.isRead) {
+                await api.put(`/notifications/${notif._id}/read`);
+                setNotifications((prev) =>
+                    prev.map((item) => (item._id === notif._id ? { ...item, isRead: true } : item))
+                );
+            }
+
+            if (notif.type === 'message') {
+                const senderId = notif.sender?._id || notif.sender;
+                navigate(senderId ? `/chat?user=${senderId}` : '/chat');
+                return;
+            }
+
+            if (notif.type === 'like' || notif.type === 'comment') {
+                navigate('/feed');
+            }
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -59,7 +79,11 @@ const NotificationPage = () => {
                 ) : (
                     <div className="divide-y divide-gray-100">
                         {notifications.map(notif => (
-                            <div key={notif._id} className={`p-4 flex items-center hover:bg-gray-50 transition ${!notif.isRead ? 'bg-blue-50/50' : ''}`}>
+                            <button
+                                key={notif._id}
+                                onClick={() => handleNotificationClick(notif)}
+                                className={`w-full text-left p-4 flex items-center hover:bg-gray-50 transition ${!notif.isRead ? 'bg-blue-50/50' : ''}`}
+                            >
                                 <div className="mr-4">
                                     <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
                                         {getIcon(notif.type)}
@@ -76,7 +100,7 @@ const NotificationPage = () => {
                                 {!notif.isRead && (
                                     <div className="h-2 w-2 rounded-full bg-blue-500 ml-2"></div>
                                 )}
-                            </div>
+                            </button>
                         ))}
                     </div>
                 )}

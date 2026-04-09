@@ -15,15 +15,33 @@ const upload = multer({
         fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: function (req, file, cb) {
-        const filetypes = /jpeg|jpg|png|webp|gif|pdf/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const ext = path.extname(file.originalname).toLowerCase();
 
-        if (mimetype && extname) {
-            return cb(null, true);
-        } else {
-            cb(new Error('Only image and PDF files are allowed!'));
+        const imageMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        const imageExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+
+        const documentMimes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+        const documentExts = ['.pdf', '.doc', '.docx'];
+
+        if (file.fieldname === 'image') {
+            if (imageMimes.includes(file.mimetype) && imageExts.includes(ext)) {
+                return cb(null, true);
+            }
+            return cb(new Error('Only image files are allowed for image upload.'));
         }
+
+        if (file.fieldname === 'file') {
+            if (documentMimes.includes(file.mimetype) && documentExts.includes(ext)) {
+                return cb(null, true);
+            }
+            return cb(new Error('Only PDF, DOC, and DOCX files are allowed for attachment upload.'));
+        }
+
+        return cb(new Error('Unexpected file field.'));
     }
 });
 

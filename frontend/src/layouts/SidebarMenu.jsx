@@ -22,21 +22,6 @@ export const teacherMenuItems = [
         icon: 'check-circle'
     },
     {
-        title: 'Grades',
-        path: '/teacher/grades',
-        icon: 'star'
-    },
-    {
-        title: 'Assignments',
-        path: '/teacher/assignments',
-        icon: 'clipboard'
-    },
-    {
-        title: 'Materials',
-        path: '/teacher/materials',
-        icon: 'folder'
-    },
-    {
         title: 'Schedule',
         path: '/teacher/schedule',
         icon: 'calendar'
@@ -67,24 +52,9 @@ export const studentMenuItems = [
         icon: 'book'
     },
     {
-        title: 'My Grades',
-        path: '/student/grades',
-        icon: 'star'
-    },
-    {
         title: 'Timetable',
         path: '/student/timetable',
         icon: 'calendar'
-    },
-    {
-        title: 'Study Materials',
-        path: '/student/materials',
-        icon: 'folder'
-    },
-    {
-        title: 'Assignments',
-        path: '/student/assignments',
-        icon: 'clipboard'
     },
     {
         title: 'Notifications',

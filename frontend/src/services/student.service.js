@@ -7,6 +7,7 @@ const studentService = {
     // Courses
     getMyCourses: () => api.get('/student/courses'),
     getCourseDetails: (courseId) => api.get(`/student/courses/${courseId}`),
+    enrollCourse: (courseId) => api.post(`/student/courses/${courseId}/enroll`),
     
     // Grades
     getMyGrades: () => api.get('/student/grades'),
@@ -18,6 +19,11 @@ const studentService = {
     
     // Timetable
     getTimetable: () => api.get('/student/timetable'),
+
+    // Reminders
+    getReminders: () => api.get('/student/reminders'),
+    createReminder: (data) => api.post('/student/reminders', data),
+    deleteReminder: (reminderId) => api.delete(`/student/reminders/${reminderId}`),
     
     // Materials
     getMaterials: () => api.get('/student/materials'),

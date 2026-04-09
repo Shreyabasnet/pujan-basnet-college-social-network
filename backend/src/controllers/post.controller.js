@@ -81,7 +81,7 @@ export const deletePost = async (req, res) => {
         }
 
         // Check user
-        if (post.author.toString() !== req.user.id && req.user.role !== 'Admin') {
+        if (post.author.toString() !== req.user.id && req.user.role !== 'ADMIN') {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
@@ -188,7 +188,7 @@ export const updatePost = async (req, res) => {
         }
 
         // Check user
-        if (post.author.toString() !== req.user.id && req.user.role !== 'Admin') {
+        if (post.author.toString() !== req.user.id && req.user.role !== 'ADMIN') {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
@@ -246,7 +246,7 @@ export const deleteComment = async (req, res) => {
         }
 
         // Check user: Allow if user is comment author OR post author OR Admin
-        if (comment.user.toString() !== req.user.id && post.author.toString() !== req.user.id && req.user.role !== 'Admin') {
+        if (comment.user.toString() !== req.user.id && post.author.toString() !== req.user.id && req.user.role !== 'ADMIN') {
             return res.status(401).json({ message: 'User not authorized' });
         }
 

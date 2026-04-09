@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Clock, Plus, Trash2, X, LayoutGrid } from 'lucide-react';
+import { Calendar, MapPin, Clock, Plus, Trash2, X, LayoutGrid, Edit2, Ban } from 'lucide-react';
 import EventCalendar from '../../components/common/EventCalendar';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -11,6 +11,8 @@ const EventPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'calendar'
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [editingEventId, setEditingEventId] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Form State
     const [title, setTitle] = useState('');
@@ -46,8 +48,35 @@ const EventPage = () => {
         }
     };
 
+    const handleCancelEvent = async (eventId) => {
+        if (!window.confirm("Cancel this event?")) return;
+        try {
+            await api.patch(`/events/${eventId}/cancel`);
+            setEvents((prev) => prev.filter((e) => e._id !== eventId));
+            if (selectedEvent?._id === eventId) {
+                setSelectedEvent(null);
+            }
+            toast.success("Event cancelled");
+        } catch (error) {
+            toast.error("Failed to cancel event");
+        }
+    };
+
+    const handleEditEvent = (event) => {
+        setEditingEventId(event._id);
+        setTitle(event.title || '');
+        setDescription(event.description || '');
+        setDate(event.date ? new Date(event.date).toISOString().split('T')[0] : '');
+        setTime(event.time || '');
+        setLocation(event.location || '');
+        setImage(null);
+        setShowModal(true);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
+
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
@@ -56,18 +85,52 @@ const EventPage = () => {
         formData.append('location', location);
         if (image) formData.append('image', image);
 
+        setIsSubmitting(true);
         try {
-            await api.post('/events', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            toast.success("Event created!");
+            if (editingEventId) {
+                await api.put(`/events/${editingEventId}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success("Event updated!");
+            } else {
+                await api.post('/events', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                toast.success("Event created!");
+            }
+
             setShowModal(false);
+            setEditingEventId(null);
             // Reset form
             setTitle(''); setDescription(''); setDate(''); setTime(''); setLocation(''); setImage(null);
             fetchEvents();
         } catch (error) {
-            toast.error("Failed to create event");
+            toast.error(error.response?.data?.message || (editingEventId ? "Failed to update event" : "Failed to create event"));
+        } finally {
+            setIsSubmitting(false);
         }
+    };
+
+    const openCreateModal = () => {
+        setEditingEventId(null);
+        setTitle('');
+        setDescription('');
+        setDate('');
+        setTime('');
+        setLocation('');
+        setImage(null);
+        setShowModal(true);
+    };
+
+    const closeEventModal = () => {
+        setShowModal(false);
+        setEditingEventId(null);
+        setTitle('');
+        setDescription('');
+        setDate('');
+        setTime('');
+        setLocation('');
+        setImage(null);
     };
 
     return (
@@ -99,7 +162,7 @@ const EventPage = () => {
                         </div>
                         {isAuthorized && (
                             <button
-                                onClick={() => setShowModal(true)}
+                                onClick={openCreateModal}
                                 className="flex items-center bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition shadow-md whitespace-now8 text-sm font-medium"
                             >
                                 <Plus className="h-4 w-4 mr-2" />
@@ -169,8 +232,8 @@ const EventPage = () => {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-gray-900">Create New Event</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
+                            <h3 className="text-lg font-bold text-gray-900">{editingEventId ? 'Update Event' : 'Create New Event'}</h3>
+                            <button onClick={closeEventModal} className="text-gray-400 hover:text-gray-600">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -202,8 +265,10 @@ const EventPage = () => {
                                 <input type="file" accept="image/*" className="w-full" onChange={e => setImage(e.target.files[0])} />
                             </div>
                             <div className="pt-2 flex justify-end space-x-3">
-                                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">Create Event</button>
+                                <button type="button" onClick={closeEventModal} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Close</button>
+                                <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                                    {isSubmitting ? 'Saving...' : (editingEventId ? 'Update Event' : 'Create Event')}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -239,16 +304,32 @@ const EventPage = () => {
                                     <h2 className="text-3xl font-extrabold text-gray-900">{selectedEvent.title}</h2>
                                 </div>
                                 {isAuthorized && (
-                                    <button
-                                        onClick={() => {
-                                            handleDelete(selectedEvent._id);
-                                            setSelectedEvent(null);
-                                        }}
-                                        className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition"
-                                        title="Delete Event"
-                                    >
-                                        <Trash2 className="h-5 w-5" />
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleEditEvent(selectedEvent)}
+                                            className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition"
+                                            title="Update Event"
+                                        >
+                                            <Edit2 className="h-5 w-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleCancelEvent(selectedEvent._id)}
+                                            className="text-amber-500 hover:bg-amber-50 p-2 rounded-lg transition"
+                                            title="Cancel Event"
+                                        >
+                                            <Ban className="h-5 w-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                handleDelete(selectedEvent._id);
+                                                setSelectedEvent(null);
+                                            }}
+                                            className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition"
+                                            title="Delete Event"
+                                        >
+                                            <Trash2 className="h-5 w-5" />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
 

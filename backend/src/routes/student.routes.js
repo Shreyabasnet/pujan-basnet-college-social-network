@@ -4,12 +4,12 @@ import { studentOnly } from '../middleware/roleBasedAuth.js';
 import {
     getStudentDashboard,
     getMyCourses,
-    getMyGrades,
     getMyAttendance,
     getMyTimetable,
-    getMyMaterials,
-    downloadMaterial,
-    getMyAssignments
+    enrollCourse,
+    getMyReminders,
+    createReminder,
+    deleteReminder
 } from '../controllers/student.controller.js';
 
 const router = express.Router();
@@ -23,17 +23,15 @@ router.get('/dashboard', getStudentDashboard);
 
 // Courses
 router.get('/courses', getMyCourses);
+router.post('/courses/:courseId/enroll', enrollCourse);
 
 // Academic
-router.get('/grades', getMyGrades);
 router.get('/attendance', getMyAttendance);
 router.get('/timetable', getMyTimetable);
 
-// Materials
-router.get('/materials', getMyMaterials);
-router.get('/materials/:materialId/download', downloadMaterial);
-
-// Assignments
-router.get('/assignments', getMyAssignments);
+// Reminders
+router.get('/reminders', getMyReminders);
+router.post('/reminders', createReminder);
+router.delete('/reminders/:reminderId', deleteReminder);
 
 export default router;

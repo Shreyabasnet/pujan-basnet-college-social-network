@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useStudent } from '../../hooks/useStudent';
 import CourseEnrollmentCard from '../../components/student/CourseEnrollmentCard';
-import GradeView from '../../components/student/GradeView';
 import Timetable from '../../components/student/Timetable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import api from '../../services/api';
 
 const StudentDashboard = () => {
     const { getDashboardData, loading } = useStudent();
+    const [announcements, setAnnouncements] = useState([]);
     const [dashboardData, setDashboardData] = useState({
         enrolledCourses: [],
         recentGrades: [],
@@ -17,11 +19,22 @@ const StudentDashboard = () => {
 
     useEffect(() => {
         fetchDashboardData();
+        fetchAnnouncements();
     }, []);
 
     const fetchDashboardData = async () => {
         const data = await getDashboardData();
         setDashboardData(data);
+    };
+
+    const fetchAnnouncements = async () => {
+        try {
+            const res = await api.get('/announcements');
+            setAnnouncements((res.data || []).slice(0, 3));
+        } catch (error) {
+            console.error(error);
+            setAnnouncements([]);
+        }
     };
 
     if (loading) return <LoadingSpinner />;
@@ -36,14 +49,6 @@ const StudentDashboard = () => {
 
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-500">Academic Score</div>
-                    <div className="text-2xl font-bold">
-                        {dashboardData.recentGrades.length > 0 
-                            ? (dashboardData.recentGrades.reduce((acc, g) => acc + (g.grade/g.maxGrade), 0) / dashboardData.recentGrades.length * 100).toFixed(1) + '%'
-                            : 'N/A'}
-                    </div>
-                </div>
                 <div className="bg-white rounded-lg shadow p-4 border border-blue-50">
                     <div className="text-gray-500 font-medium">Courses</div>
                     <div className="text-2xl font-bold text-blue-600">{dashboardData.enrolledCourses.length}</div>
@@ -76,11 +81,6 @@ const StudentDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Recent Grades */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold mb-4">Recent Grades</h2>
-                        <GradeView grades={dashboardData.recentGrades} />
-                    </div>
                 </div>
 
                 {/* Right Column */}
@@ -104,6 +104,29 @@ const StudentDashboard = () => {
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow p-6">
+                        <h2 className="text-xl font-semibold mb-4">Latest Announcements</h2>
+                        {announcements.length === 0 ? (
+                            <p className="text-sm text-gray-500">No announcements yet</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {announcements.map((announcement) => (
+                                    <Link
+                                        to="/announcements"
+                                        key={announcement._id}
+                                        className="block border-l-4 border-amber-500 pl-3 hover:bg-amber-50 rounded-r-md transition"
+                                    >
+                                        <p className="font-medium text-gray-900">{announcement.title}</p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            By {announcement.createdBy?.username || 'Admin'}
+                                        </p>
+                                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{announcement.content}</p>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

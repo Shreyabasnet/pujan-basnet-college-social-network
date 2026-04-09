@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import io from 'socket.io-client';
-import { Send, Search, MoreVertical, File, Paperclip, X, Trash2, Image as ImageIcon, Smile } from 'lucide-react';
+import { Send, Search, MoreVertical, File, Paperclip, X, Image as ImageIcon, Smile } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 
 const ENDPOINT = "http://localhost:5000";
@@ -10,15 +12,40 @@ var socket;
 
 const ChatPage = () => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [conversations, setConversations] = useState([]);
     const [filteredConversations, setFilteredConversations] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [unreadCounts, setUnreadCounts] = useState({});
+    const [openDeleteMenuId, setOpenDeleteMenuId] = useState(null);
     const [newMessage, setNewMessage] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const fileInputRef = useRef(null);
     const messagesEndRef = useRef(null);
+    const conversationsRef = useRef([]);
+
+    const moveConversationToTop = (list, userId) => {
+        if (!userId) return list;
+
+        const index = list.findIndex((u) => u._id === userId);
+        if (index <= 0) return list;
+
+        const next = [...list];
+        const [target] = next.splice(index, 1);
+        next.unshift(target);
+        return next;
+    };
+
+    const getConversationName = (userId) => {
+        const userItem = conversationsRef.current.find((u) => u._id === userId);
+        return userItem?.username || 'New message';
+    };
+
+    useEffect(() => {
+        conversationsRef.current = conversations;
+    }, [conversations]);
 
     useEffect(() => {
         socket = io(ENDPOINT);
@@ -32,9 +59,36 @@ const ChatPage = () => {
         socket.on("receive_message", (data) => {
             if (activeChatRef.current && activeChatRef.current === data.senderId) {
                 setMessages((prev) => [...prev, data.message]);
+            } else {
+                setUnreadCounts((prev) => ({
+                    ...prev,
+                    [data.senderId]: (prev[data.senderId] || 0) + 1,
+                }));
+
+                const senderName = data.message?.sender?.username || getConversationName(data.senderId);
+                const preview = data.message?.text?.trim() || (data.message?.fileUrl ? 'Sent an attachment' : 'Sent a message');
+                toast(`${senderName}: ${preview}`, {
+                    icon: '💬',
+                    duration: 3000,
+                });
             }
+
+            setConversations((prev) => moveConversationToTop(prev, data.senderId));
         });
-        return () => socket.off("receive_message");
+
+        socket.on("message_unsent", (data) => {
+            setMessages((prev) => prev.filter((msg) => msg._id !== data.messageId));
+        });
+
+        socket.on("message_deleted_for_me", (data) => {
+            setMessages((prev) => prev.filter((msg) => msg._id !== data.messageId));
+        });
+
+        return () => {
+            socket.off("receive_message");
+            socket.off("message_unsent");
+            socket.off("message_deleted_for_me");
+        };
     }, []);
 
     const activeChatRef = useRef(null);
@@ -47,8 +101,25 @@ const ChatPage = () => {
     }, []);
 
     useEffect(() => {
+        const userFromQuery = searchParams.get('user');
+        if (!userFromQuery || conversations.length === 0) return;
+
+        const matchedUser = conversations.find((item) => item._id === userFromQuery);
+        if (matchedUser && selectedUser?._id !== matchedUser._id) {
+            setSelectedUser(matchedUser);
+        }
+    }, [searchParams, conversations, selectedUser]);
+
+    useEffect(() => {
         if (selectedUser) {
             fetchMessages(selectedUser._id);
+            setUnreadCounts((prev) => {
+                if (!prev[selectedUser._id]) return prev;
+                return {
+                    ...prev,
+                    [selectedUser._id]: 0,
+                };
+            });
         }
     }, [selectedUser]);
 
@@ -77,6 +148,11 @@ const ChatPage = () => {
             const res = await api.get('/messages/conversations');
             setConversations(res.data);
             setFilteredConversations(res.data);
+            const initialUnread = {};
+            for (const item of res.data) {
+                initialUnread[item._id] = item.unreadCount || 0;
+            }
+            setUnreadCounts(initialUnread);
         } catch (error) {
             console.error(error);
         }
@@ -106,12 +182,8 @@ const ChatPage = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            setMessages([...messages, res.data]);
-            socket.emit("send_message", {
-                receiverId: selectedUser._id,
-                senderId: user.id || user._id,
-                message: res.data
-            });
+            setMessages((prev) => [...prev, res.data]);
+            setConversations((prev) => moveConversationToTop(prev, selectedUser._id));
 
             setNewMessage("");
             setSelectedFile(null);
@@ -121,8 +193,27 @@ const ChatPage = () => {
         }
     };
 
-    const handleUnsendMessage = (messageIndex) => {
-        setMessages(messages.filter((_, index) => index !== messageIndex));
+    const handleDeleteMessage = async (messageId, scope) => {
+        if (!messageId || !selectedUser) return;
+
+        try {
+            await api.delete(`/messages/${messageId}`, {
+                params: { scope },
+            });
+            setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+            setOpenDeleteMenuId(null);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to delete message');
+        }
+    };
+
+    const getMessageReceipt = (msg) => {
+        if (!isMessageFromMe(msg)) {
+            return null;
+        }
+
+        return msg.isRead ? 'Delivered' : 'Sent';
     };
 
     const groupMessagesByDate = (msgs) => {
@@ -139,6 +230,7 @@ const ChatPage = () => {
 
     return (
         <div className="flex h-[calc(100vh-64px)] bg-white">
+            <Toaster position="top-right" />
             {/* Sidebar - Conversations */}
             <div className="w-96 border-r border-gray-200 flex flex-col bg-white">
                 {/* Header */}
@@ -168,7 +260,10 @@ const ChatPage = () => {
                         filteredConversations.map(u => (
                             <div
                                 key={u._id}
-                                onClick={() => setSelectedUser(u)}
+                                onClick={() => {
+                                    setSelectedUser(u);
+                                    setOpenDeleteMenuId(null);
+                                }}
                                 className={`p-3 cursor-pointer transition-colors border-b border-gray-100 hover:bg-gray-50 ${
                                     selectedUser?._id === u._id ? 'bg-blue-50' : ''
                                 }`}
@@ -184,8 +279,14 @@ const ChatPage = () => {
                                         </div>
                                     </div>
                                     <div className="ml-3 flex-1 min-w-0">
-                                        <h3 className="font-500 text-gray-900 text-sm">{u.username}</h3>
-                                        <p className="text-xs text-gray-500 truncate">{u.department}</p>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <h3 className="font-500 text-gray-900 text-sm truncate">{u.username}</h3>
+                                            {unreadCounts[u._id] > 0 && (
+                                                <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                                    {unreadCounts[u._id] > 99 ? '99+' : unreadCounts[u._id]}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -234,8 +335,12 @@ const ChatPage = () => {
                             ) : (
                                 messages.map((msg, index) => {
                                     const isMe = isMessageFromMe(msg);
+                                    const receipt = getMessageReceipt(msg);
+                                    const formattedTime = msg.createdAt
+                                        ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                        : '';
                                     return (
-                                        <div key={index} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                        <div key={msg._id || index} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                             <div className="group relative max-w-xs">
                                                 <div className={`rounded-2xl px-4 py-2 ${
                                                     isMe 
@@ -257,15 +362,69 @@ const ChatPage = () => {
                                                             </a>
                                                         </div>
                                                     )}
+
+                                                    {receipt && (
+                                                        <p className={`mt-1 text-[10px] font-medium ${isMe ? 'text-white/80 text-right' : 'text-gray-500'}`}>
+                                                            {receipt}
+                                                        </p>
+                                                    )}
+
+                                                    {formattedTime && (
+                                                        <p className={`mt-1 text-[10px] ${isMe ? 'text-white/75 text-right' : 'text-gray-500 text-left'}`}>
+                                                            {formattedTime}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 {isMe && (
-                                                    <button
-                                                        onClick={() => handleUnsendMessage(index)}
-                                                        className="absolute -top-6 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-red-500 hover:text-red-700"
-                                                        title="Unsend"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+                                                    <div className="absolute -top-8 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => setOpenDeleteMenuId((prev) => prev === msg._id ? null : msg._id)}
+                                                            className="p-1 text-gray-700 hover:text-gray-900"
+                                                            title="Message options"
+                                                        >
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </button>
+
+                                                        {openDeleteMenuId === msg._id && (
+                                                            <div className="absolute top-6 right-0 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                                                <button
+                                                                    onClick={() => handleDeleteMessage(msg._id, 'everyone')}
+                                                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                                                                >
+                                                                    Delete for everyone
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteMessage(msg._id, 'me')}
+                                                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                                                                >
+                                                                    Delete for me
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {!isMe && (
+                                                    <div className="absolute -top-8 left-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => setOpenDeleteMenuId((prev) => prev === msg._id ? null : msg._id)}
+                                                            className="p-1 text-gray-700 hover:text-gray-900"
+                                                            title="Message options"
+                                                        >
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </button>
+
+                                                        {openDeleteMenuId === msg._id && (
+                                                            <div className="absolute top-6 left-0 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                                                <button
+                                                                    onClick={() => handleDeleteMessage(msg._id, 'me')}
+                                                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                                                                >
+                                                                    Delete for me
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -304,7 +463,7 @@ const ChatPage = () => {
                                     type="file"
                                     ref={fileInputRef}
                                     className="hidden"
-                                    accept=".pdf,application/pdf"
+                                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                                     onChange={(e) => setSelectedFile(e.target.files[0])}
                                 />
                                 <input

@@ -142,9 +142,50 @@ const CoursesPage = () => {
                                 </div>
                             )}
                             {activeTab === 'students' && (
-                                <div className="text-center py-12">
-                                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                    <p className="text-gray-500">{selectedCourse.studentsEnrolled > 0 ? `${selectedCourse.studentsEnrolled} student(s) enrolled` : 'No students enrolled'}</p>
+                                <div>
+                                    {selectedCourse.students && selectedCourse.students.length > 0 ? (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-lg font-semibold text-gray-900">
+                                                    Enrolled Students ({selectedCourse.students.length})
+                                                </h3>
+                                            </div>
+                                            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                                <table className="w-full">
+                                                    <thead className="bg-gray-50 border-b border-gray-200">
+                                                        <tr>
+                                                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+                                                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Username</th>
+                                                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
+                                                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Department</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {selectedCourse.students.map((student, index) => (
+                                                            <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                                                                <td className="px-6 py-4">
+                                                                    <div className="flex items-center space-x-3">
+                                                                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                                                                            {student.username?.charAt(0).toUpperCase() || 'S'}
+                                                                        </div>
+                                                                        <span className="text-gray-900 font-medium">{student.fullName || 'N/A'}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-gray-600">{student.username || 'N/A'}</td>
+                                                                <td className="px-6 py-4 text-gray-600">{student.email || 'N/A'}</td>
+                                                                <td className="px-6 py-4 text-gray-600">{student.department || 'N/A'}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                            <p className="text-gray-500">No students enrolled</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

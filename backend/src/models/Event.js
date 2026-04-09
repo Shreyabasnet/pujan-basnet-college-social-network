@@ -25,6 +25,16 @@ const eventSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    status: {
+        type: String,
+        enum: ['ACTIVE', 'CANCELLED'],
+        default: 'ACTIVE',
+    },
+    expiresAt: {
+        type: Date,
+        required: true,
+        index: { expires: 0 },
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
