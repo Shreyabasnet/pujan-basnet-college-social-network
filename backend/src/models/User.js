@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, default: "" },
     department: { type: String, default: "" },
     year: { type: String, default: "" },
+    classSection: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ClassSection',
+      default: null
+    },
     resetPasswordToken: { type: String },
     resetPasswordExpire: { type: Date }
   },

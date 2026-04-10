@@ -68,10 +68,10 @@ export const useStudent = () => {
         setLoading(true);
         try {
             const response = await studentService.getTimetable();
-            return response.data.data || [];
+            return response.data.data || { class: null, entries: [] };
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to fetch timetable');
-            return [];
+            return { class: null, entries: [] };
         } finally {
             setLoading(false);
         }

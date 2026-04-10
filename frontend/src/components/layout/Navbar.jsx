@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Bell } from 'lucide-react';
 import io from 'socket.io-client';
@@ -10,6 +10,7 @@ import { SOCKET_ENDPOINT } from '../../config/constants.js';
 const Navbar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchTerm, setSearchTerm] = useState('');
     const [unreadCount, setUnreadCount] = useState(0);
     const [chatUnreadCount, setChatUnreadCount] = useState(0);
@@ -31,9 +32,26 @@ const Navbar = () => {
             fetchUnreadCount();
             fetchChatUnreadCount();
 
-            return () => socket.disconnect();
+            // Listen for notification updates from other components
+            const handleNotificationUpdate = () => {
+                fetchUnreadCount();
+            };
+            window.addEventListener('notificationUpdated', handleNotificationUpdate);
+
+            return () => {
+                socket.disconnect();
+                window.removeEventListener('notificationUpdated', handleNotificationUpdate);
+            };
         }
     }, [user]);
+
+    // Refresh unread count when returning from notifications page or other routes
+    useEffect(() => {
+        if (user) {
+            fetchUnreadCount();
+            fetchChatUnreadCount();
+        }
+    }, [location.pathname, user]);
 
     const fetchUnreadCount = async () => {
         try {

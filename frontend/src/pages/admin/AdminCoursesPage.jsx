@@ -11,7 +11,9 @@ const AdminCoursesPage = () => {
     const [teachers, setTeachers] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
-    const [formData, setFormData] = useState({});
+    const [formData, setFormData] = useState({
+        schedule: {}
+    });
 
     useEffect(() => {
         const init = async () => {
@@ -35,10 +37,28 @@ const AdminCoursesPage = () => {
                 name: item.name || '',
                 department: item.department || '',
                 teacher: item.teacher?._id || item.teacher || '',
-                description: item.description || ''
+                description: item.description || '',
+                schedule: {
+                    day: item.schedule?.day || '',
+                    startTime: item.schedule?.startTime || '',
+                    endTime: item.schedule?.endTime || '',
+                    room: item.schedule?.room || ''
+                }
             });
         } else {
-            setFormData({});
+            setFormData({
+                code: '',
+                name: '',
+                department: '',
+                teacher: '',
+                description: '',
+                schedule: {
+                    day: '',
+                    startTime: '',
+                    endTime: '',
+                    room: ''
+                }
+            });
         }
         setShowModal(true);
     };

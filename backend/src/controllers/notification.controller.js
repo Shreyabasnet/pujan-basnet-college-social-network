@@ -32,6 +32,26 @@ export const markAsRead = async (req, res) => {
     }
 };
 
+export const markAsUnread = async (req, res) => {
+    try {
+        const notification = await Notification.findById(req.params.id);
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        if (notification.recipient.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
+        notification.isRead = false;
+        await notification.save();
+
+        res.json(notification);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 export const markAllAsRead = async (req, res) => {
     try {
         await Notification.updateMany(

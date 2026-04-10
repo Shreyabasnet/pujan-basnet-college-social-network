@@ -36,6 +36,7 @@ import StudentsPage from './pages/admin/StudentsPage';
 import AdminCoursesPage from './pages/admin/AdminCoursesPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import LogsPage from './pages/admin/LogsPage';
+import TimetableManagementPage from './pages/admin/TimetableManagementPage';
 
 import StudentLayout from './layouts/StudentLayout.jsx';
 import TeacherLayout from './layouts/TeacherLayout.jsx';
@@ -97,6 +98,7 @@ function App() {
               <Route path="/admin/teachers" element={<TeachersPage />} />
               <Route path="/admin/students" element={<StudentsPage />} />
               <Route path="/admin/courses" element={<AdminCoursesPage />} />
+              <Route path="/admin/timetable" element={<TimetableManagementPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
               <Route path="/admin/logs" element={<LogsPage />} />
             </Route>

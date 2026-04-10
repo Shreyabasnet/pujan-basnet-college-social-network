@@ -13,6 +13,7 @@ const CourseModal = ({
     if (!showModal) return null;
 
     const safeTeachers = Array.isArray(teachers) ? teachers : [];
+    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -109,6 +110,85 @@ const CourseModal = ({
                             value={formData.description || ''}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         ></textarea>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Class Day
+                            </label>
+                            <select
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                                value={formData.schedule?.day || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    schedule: {
+                                        ...(formData.schedule || {}),
+                                        day: e.target.value
+                                    }
+                                })}
+                            >
+                                <option value="">Select day</option>
+                                {weekdays.map((day) => (
+                                    <option key={day} value={day}>{day}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Start Time
+                            </label>
+                            <input
+                                type="time"
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                                value={formData.schedule?.startTime || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    schedule: {
+                                        ...(formData.schedule || {}),
+                                        startTime: e.target.value
+                                    }
+                                })}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                End Time
+                            </label>
+                            <input
+                                type="time"
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                                value={formData.schedule?.endTime || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    schedule: {
+                                        ...(formData.schedule || {}),
+                                        endTime: e.target.value
+                                    }
+                                })}
+                            />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Room
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g., B-204"
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                                value={formData.schedule?.room || ''}
+                                onChange={(e) => setFormData({
+                                    ...formData,
+                                    schedule: {
+                                        ...(formData.schedule || {}),
+                                        room: e.target.value
+                                    }
+                                })}
+                            />
+                        </div>
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-6 border-t mt-6">

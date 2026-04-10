@@ -119,6 +119,16 @@ const startServer = async () => {
     await connectDB();
     connectCloudinary();
 
+    httpServer.on("error", (error) => {
+      if (error.code === "EADDRINUSE") {
+        console.error(`Port ${config.port} is already in use. Stop the existing server or change PORT in backend/.env.`);
+        process.exit(1);
+      }
+
+      console.error("Server error:", error.message);
+      process.exit(1);
+    });
+
     httpServer.listen(config.port, () => {
       console.log(`Server running at port ${config.port}...`);
     });

@@ -96,6 +96,11 @@ export const adminMenuItems = [
         icon: 'book-open'
     },
     {
+        title: 'Timetable',
+        path: '/admin/timetable',
+        icon: 'calendar'
+    },
+    {
         title: 'Settings',
         path: '/admin/settings',
         icon: 'settings'

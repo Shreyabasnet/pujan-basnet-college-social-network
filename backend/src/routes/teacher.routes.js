@@ -8,6 +8,7 @@ import {
     getCourseStudents,
     markAttendance
 } from '../controllers/teacher.controller.js';
+import { getMyTeacherTimetable } from '../controllers/timetable.controller.js';
 
 const router = express.Router();
 
@@ -31,6 +32,9 @@ router.get("/courses/:courseId/students", getCourseStudents);
 
 // Attendance
 router.post("/attendance", markAttendance);
+
+// Timetable
+router.get('/timetable/me', getMyTeacherTimetable);
 
 
 // Grades

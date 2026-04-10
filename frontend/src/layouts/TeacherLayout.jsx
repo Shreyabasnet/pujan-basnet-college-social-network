@@ -8,7 +8,7 @@ const TeacherLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex h-screen bg-slate-50">
             <Sidebar
                 menuItems={teacherMenuItems}
                 isOpen={sidebarOpen}
@@ -21,8 +21,10 @@ const TeacherLayout = () => {
                     title="Teacher Dashboard"
                 />
 
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">
+                    <div className="mx-auto max-w-7xl">
                     <Outlet />
+                    </div>
                 </main>
             </div>
         </div>

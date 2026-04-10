@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { Heart, MessageSquare, Bell } from 'lucide-react';
+import { Heart, MessageSquare, Bell, Check, X } from 'lucide-react';
 
 const NotificationPage = () => {
     const navigate = useNavigate();
@@ -23,15 +23,37 @@ const NotificationPage = () => {
         }
     };
 
+    const handleMarkAsRead = async (e, notif) => {
+        e.stopPropagation();
+        try {
+            await api.put(`/notifications/${notif._id}/read`);
+            setNotifications((prev) =>
+                prev.map((item) => (item._id === notif._id ? { ...item, isRead: true } : item))
+            );
+            // Trigger navbar refresh
+            window.dispatchEvent(new Event('notificationUpdated'));
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleMarkAsUnread = async (e, notif) => {
+        e.stopPropagation();
+        try {
+            // Note: You may need to add this endpoint to your backend if it doesn't exist
+            await api.put(`/notifications/${notif._id}/unread`);
+            setNotifications((prev) =>
+                prev.map((item) => (item._id === notif._id ? { ...item, isRead: false } : item))
+            );
+            // Trigger navbar refresh
+            window.dispatchEvent(new Event('notificationUpdated'));
+        } catch (error) {
+            console.error('This feature requires a /unread endpoint on your backend', error);
+        }
+    };
+
     const handleNotificationClick = async (notif) => {
         try {
-            if (!notif.isRead) {
-                await api.put(`/notifications/${notif._id}/read`);
-                setNotifications((prev) =>
-                    prev.map((item) => (item._id === notif._id ? { ...item, isRead: true } : item))
-                );
-            }
-
             if (notif.type === 'message') {
                 const senderId = notif.sender?._id || notif.sender;
                 navigate(senderId ? `/chat?user=${senderId}` : '/chat');
@@ -64,7 +86,7 @@ const NotificationPage = () => {
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="p-4 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="text-lg font-semibold text-gray-900">Recent Notifications</h2>
-                    <span className="text-sm text-gray-500">{notifications.length} Total</span>
+                    <span className="text-sm text-gray-500">{notifications.length} Total ({notifications.filter(n => !n.isRead).length} Unread)</span>
                 </div>
 
                 {loading ? (
@@ -79,7 +101,7 @@ const NotificationPage = () => {
                 ) : (
                     <div className="divide-y divide-gray-100">
                         {notifications.map(notif => (
-                            <button
+                            <div
                                 key={notif._id}
                                 onClick={() => handleNotificationClick(notif)}
                                 className={`w-full text-left p-4 flex items-center hover:bg-gray-50 transition ${!notif.isRead ? 'bg-blue-50/50' : ''}`}
@@ -97,10 +119,31 @@ const NotificationPage = () => {
                                         {new Date(notif.createdAt).toLocaleDateString()} at {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
+                                <div className="flex gap-2 ml-4">
+                                    {!notif.isRead ? (
+                                        <button
+                                            onClick={(e) => handleMarkAsRead(e, notif)}
+                                            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition"
+                                            title="Mark as read"
+                                        >
+                                            <Check className="h-4 w-4" />
+                                            Mark Read
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={(e) => handleMarkAsUnread(e, notif)}
+                                            className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+                                            title="Mark as unread"
+                                        >
+                                            <X className="h-4 w-4" />
+                                            Mark Unread
+                                        </button>
+                                    )}
+                                </div>
                                 {!notif.isRead && (
                                     <div className="h-2 w-2 rounded-full bg-blue-500 ml-2"></div>
                                 )}
-                            </button>
+                            </div>
                         ))}
                     </div>
                 )}

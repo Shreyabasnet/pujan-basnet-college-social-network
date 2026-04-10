@@ -3,6 +3,7 @@ import { useAdmin } from '../../hooks/useAdmin';
 import AdminUserTable from '../../components/admin/AdminUserTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { X } from 'lucide-react';
+import adminService from '../../services/admin.service';
 
 const StudentsPage = () => {
     const { getStudents, deleteUser, updateUser, loading, error } = useAdmin();
@@ -10,14 +11,50 @@ const StudentsPage = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState(null);
     const [formData, setFormData] = useState({ username: '', email: '' });
+    const [classSections, setClassSections] = useState([]);
+    const [selectedStudentId, setSelectedStudentId] = useState('');
+    const [selectedClassId, setSelectedClassId] = useState('');
+    const [assignMessage, setAssignMessage] = useState('');
 
     useEffect(() => {
         fetchStudents();
+        fetchClasses();
     }, []);
 
     const fetchStudents = async () => {
         const data = await getStudents();
         setStudents(data || []);
+        if ((data || []).length > 0 && !selectedStudentId) {
+            setSelectedStudentId(data[0]._id);
+        }
+    };
+
+    const fetchClasses = async () => {
+        try {
+            const res = await adminService.getClassSections();
+            const classes = res.data?.data || [];
+            setClassSections(classes);
+            if (classes.length > 0 && !selectedClassId) {
+                setSelectedClassId(classes[0]._id);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleAssignClass = async () => {
+        if (!selectedStudentId || !selectedClassId) {
+            setAssignMessage('Select both student and class');
+            return;
+        }
+
+        try {
+            await adminService.assignStudentClass(selectedStudentId, selectedClassId);
+            setAssignMessage('Student assigned to class successfully');
+            fetchStudents();
+        } catch (err) {
+            setAssignMessage(err.response?.data?.message || 'Failed to assign class');
+        }
     };
 
     const handleDelete = async (id) => {
@@ -65,6 +102,46 @@ const StudentsPage = () => {
                     {error}
                 </div>
             )}
+
+            <div className="bg-white rounded-lg shadow p-4 space-y-3">
+                <h2 className="text-lg font-semibold text-gray-900">Assign Student to Class</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        value={selectedStudentId}
+                        onChange={(e) => setSelectedStudentId(e.target.value)}
+                    >
+                        <option value="">Select student</option>
+                        {students.map((student) => (
+                            <option key={student._id} value={student._id}>{student.username}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        value={selectedClassId}
+                        onChange={(e) => setSelectedClassId(e.target.value)}
+                    >
+                        <option value="">Select class</option>
+                        {classSections.map((classItem) => (
+                            <option key={classItem._id} value={classItem._id}>
+                                {classItem.name} - {classItem.section} ({classItem.academicYear})
+                            </option>
+                        ))}
+                    </select>
+
+                    <button
+                        type="button"
+                        onClick={handleAssignClass}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-semibold"
+                    >
+                        Assign
+                    </button>
+                </div>
+                {assignMessage && (
+                    <p className="text-sm text-gray-600">{assignMessage}</p>
+                )}
+            </div>
 
             <div className="bg-white rounded-lg shadow">
                 <AdminUserTable 

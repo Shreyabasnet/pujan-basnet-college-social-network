@@ -5,6 +5,7 @@ import CourseEnrollmentCard from '../../components/student/CourseEnrollmentCard'
 import Timetable from '../../components/student/Timetable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import api from '../../services/api';
+import { BookOpen, CalendarDays, Megaphone, GraduationCap, TrendingUp, Users } from 'lucide-react';
 
 const StudentDashboard = () => {
     const { getDashboardData, loading } = useStudent();
@@ -41,97 +42,126 @@ const StudentDashboard = () => {
 
     return (
         <div className="space-y-6">
-            {/* Welcome Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow p-6 text-white">
-                <h1 className="text-3xl font-bold">Welcome back, Student!</h1>
-                <p className="mt-2">Here's your academic overview</p>
+            <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-primary-600 via-cyan-600 to-sky-700 p-6 text-white shadow-[0_30px_90px_-45px_rgba(15,23,42,0.5)]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%)]" />
+                <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-end">
+                    <div className="space-y-4">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/80">
+                            <GraduationCap className="h-4 w-4" />
+                            Student dashboard
+                        </span>
+                        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Welcome back, Student!</h1>
+                        <p className="max-w-2xl text-sm leading-7 text-white/80 sm:text-base">
+                            A sharper overview of your classes, deadlines, announcements, and academic progress in one place.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <MiniStat icon={<BookOpen className="h-4 w-4" />} label="Courses" value={dashboardData.enrolledCourses.length} />
+                        <MiniStat icon={<CalendarDays className="h-4 w-4" />} label="Deadlines" value={dashboardData.upcomingDeadlines.length} />
+                        <MiniStat icon={<Users className="h-4 w-4" />} label="Classes today" value={dashboardData.todayClasses.length} />
+                        <MiniStat icon={<TrendingUp className="h-4 w-4" />} label="Announcements" value={announcements.length} />
+                    </div>
+                </div>
+            </section>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <MetricCard label="Courses" value={dashboardData.enrolledCourses.length} helper="Enrolled classes" icon={<BookOpen className="h-5 w-5" />} />
+                <MetricCard label="Today's classes" value={dashboardData.todayClasses.length} helper="Sessions on your timetable" icon={<CalendarDays className="h-5 w-5" />} />
+                <MetricCard label="Deadlines" value={dashboardData.upcomingDeadlines.length} helper="Assignments and tasks" icon={<TrendingUp className="h-5 w-5" />} />
+                <MetricCard label="Announcements" value={announcements.length} helper="Recent updates" icon={<Megaphone className="h-5 w-5" />} />
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg shadow p-4 border border-blue-50">
-                    <div className="text-gray-500 font-medium">Courses</div>
-                    <div className="text-2xl font-bold text-blue-600">{dashboardData.enrolledCourses.length}</div>
-                </div>
-                <div className="bg-white rounded-lg shadow p-4">
-                    <div className="text-gray-500">Upcoming Events</div>
-                    <div className="text-2xl font-bold text-blue-500">{dashboardData.upcomingDeadlines.length}</div>
-                </div>
-            </div>
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Courses */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Enrolled Courses */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold">My Courses</h2>
-                            <button className="text-blue-600 hover:underline">
-                                View All
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+                <div className="space-y-6">
+                    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
+                        <div className="mb-5 flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Learning</p>
+                                <h2 className="mt-1 text-2xl font-black text-slate-900">My Courses</h2>
+                            </div>
+                            <button className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary-200 hover:text-primary-700">
+                                View all
                             </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {dashboardData.enrolledCourses.map(course => (
-                                <CourseEnrollmentCard 
-                                    key={course._id} 
-                                    course={course} 
-                                />
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            {dashboardData.enrolledCourses.map((course) => (
+                                <CourseEnrollmentCard key={course._id} course={course} />
                             ))}
                         </div>
-                    </div>
-
+                    </section>
                 </div>
 
-                {/* Right Column */}
                 <div className="space-y-6">
-                    {/* Today's Classes */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold mb-4">Today's Classes</h2>
+                    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
+                        <h2 className="mb-4 text-lg font-bold text-slate-900">Today's Classes</h2>
                         <Timetable classes={dashboardData.todayClasses} compact />
-                    </div>
+                    </section>
 
-                    {/* Upcoming Deadlines */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold mb-4">Upcoming Deadlines</h2>
+                    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
+                        <h2 className="mb-4 text-lg font-bold text-slate-900">Upcoming Deadlines</h2>
                         <div className="space-y-3">
-                            {dashboardData.upcomingDeadlines.map((deadline, index) => (
-                                <div key={index} className="border-l-4 border-red-500 pl-3">
-                                    <p className="font-medium">{deadline.title}</p>
-                                    <p className="text-sm text-gray-500">
-                                        Due: {deadline.date}
-                                    </p>
+                            {dashboardData.upcomingDeadlines.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                                    No upcoming deadlines.
+                                </div>
+                            ) : dashboardData.upcomingDeadlines.map((deadline, index) => (
+                                <div key={index} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                                    <p className="font-semibold text-slate-900">{deadline.title}</p>
+                                    <p className="mt-1 text-sm text-slate-500">Due: {deadline.date}</p>
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </section>
 
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold mb-4">Latest Announcements</h2>
+                    <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.35)]">
+                        <h2 className="mb-4 text-lg font-bold text-slate-900">Latest Announcements</h2>
                         {announcements.length === 0 ? (
-                            <p className="text-sm text-gray-500">No announcements yet</p>
+                            <p className="text-sm text-slate-500">No announcements yet</p>
                         ) : (
                             <div className="space-y-3">
                                 {announcements.map((announcement) => (
                                     <Link
                                         to="/announcements"
                                         key={announcement._id}
-                                        className="block border-l-4 border-amber-500 pl-3 hover:bg-amber-50 rounded-r-md transition"
+                                        className="block rounded-2xl border border-slate-100 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-amber-200 hover:bg-amber-50/60"
                                     >
-                                        <p className="font-medium text-gray-900">{announcement.title}</p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            By {announcement.createdBy?.username || 'Admin'}
-                                        </p>
-                                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{announcement.content}</p>
+                                        <p className="font-semibold text-slate-900">{announcement.title}</p>
+                                        <p className="mt-1 text-xs text-slate-500">By {announcement.createdBy?.username || 'Admin'}</p>
+                                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">{announcement.content}</p>
                                     </Link>
                                 ))}
                             </div>
                         )}
-                    </div>
+                    </section>
                 </div>
             </div>
         </div>
     );
 };
+
+const MiniStat = ({ icon, label, value }) => (
+    <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+        <div className="flex items-center gap-2 text-white/70">
+            {icon}
+            <span className="text-xs font-semibold uppercase tracking-[0.18em]">{label}</span>
+        </div>
+        <p className="mt-3 text-2xl font-black">{value}</p>
+    </div>
+);
+
+const MetricCard = ({ label, value, helper, icon }) => (
+    <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-35px_rgba(15,23,42,0.35)]">
+        <div className="flex items-start justify-between gap-3">
+            <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{label}</p>
+                <p className="mt-2 text-3xl font-black text-slate-900">{value}</p>
+                <p className="mt-2 text-sm text-slate-500">{helper}</p>
+            </div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+                {icon}
+            </div>
+        </div>
+    </div>
+);
 
 export default StudentDashboard;

@@ -5,44 +5,61 @@ const CourseCard = ({ course }) => {
     const navigate = useNavigate();
     if (!course) return null;
 
+    const formatSchedule = (schedule) => {
+        if (!schedule) return 'Schedule not set';
+        if (typeof schedule === 'string') return schedule;
+
+        const day = schedule.day || '';
+        const startTime = schedule.startTime || '';
+        const endTime = schedule.endTime || '';
+        const room = schedule.room || '';
+
+        const timeText = startTime && endTime ? `${startTime} - ${endTime}` : '';
+        const primaryText = [day, timeText].filter(Boolean).join(' | ');
+        if (!primaryText && !room) return 'Schedule not set';
+
+        return room ? `${primaryText || 'Time TBD'} (${room})` : primaryText;
+    };
+
     return (
-        <div className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white">
-            <div className="h-24 bg-indigo-600 flex items-center justify-center text-white">
+        <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="flex h-24 items-center justify-between bg-gradient-to-r from-primary-600 to-cyan-600 px-5 text-white">
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">Course</p>
+                    <span className="text-2xl font-black">{course.code}</span>
+                </div>
                 <span className="text-4xl">📘</span>
             </div>
-            <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg text-gray-800 line-clamp-1">
+            <div className="p-5">
+                <div className="mb-2 flex items-start justify-between gap-3">
+                    <h3 className="line-clamp-1 text-lg font-black text-slate-900">
                         {course.name}
                     </h3>
-                    <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">
-                        {course.code}
-                    </span>
                 </div>
 
-                <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
+                <div className="mb-4 space-y-2">
+                    <div className="flex items-center text-sm text-slate-600">
                         <span className="mr-2">👥</span>
                         {course.studentsEnrolled || 0} Students Enrolled
                     </div>
-                    <div className="flex items-center text-sm text-gray-600">
+                    <div className="flex items-center text-sm text-slate-600">
                         <span className="mr-2">🕒</span>
-                        {course.schedule || 'Schedule not set'}
+                        {formatSchedule(course.schedule)}
                     </div>
                 </div>
 
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div className="mb-4 h-2 w-full rounded-full bg-slate-100">
                     <div
-                        className="bg-indigo-500 h-2 rounded-full"
+                        className="h-2 rounded-full bg-gradient-to-r from-primary-500 to-cyan-500"
                         style={{ width: `${course.progress || 0}%` }}
                     ></div>
                 </div>
 
-                <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Progress: {course.progress || 0}%</span>
-                    <button 
+                <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Progress: {course.progress || 0}%</span>
+                    <button
                         onClick={() => navigate(`/teacher/courses/${course._id}`)}
-                        className="text-indigo-600 font-semibold hover:text-indigo-800"
+                        className="font-semibold text-primary-600 transition hover:text-primary-800"
                     >
                         View Details →
                     </button>

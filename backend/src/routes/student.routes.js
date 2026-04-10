@@ -5,12 +5,12 @@ import {
     getStudentDashboard,
     getMyCourses,
     getMyAttendance,
-    getMyTimetable,
     enrollCourse,
     getMyReminders,
     createReminder,
     deleteReminder
 } from '../controllers/student.controller.js';
+import { getMyClassTimetable } from '../controllers/timetable.controller.js';
 
 const router = express.Router();
 
@@ -27,7 +27,8 @@ router.post('/courses/:courseId/enroll', enrollCourse);
 
 // Academic
 router.get('/attendance', getMyAttendance);
-router.get('/timetable', getMyTimetable);
+router.get('/timetable', getMyClassTimetable);
+router.get('/timetable/me', getMyClassTimetable);
 
 // Reminders
 router.get('/reminders', getMyReminders);

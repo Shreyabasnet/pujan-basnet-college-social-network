@@ -32,7 +32,7 @@ const teacherService = {
     getAnnouncements: () => api.get('/announcements'),
     
     // Schedule
-    getSchedule: () => api.get('/teacher/schedule'),
+    getSchedule: () => api.get('/teacher/timetable/me'),
     
     // Profile
     getProfile: () => api.get('/teacher/profile'),

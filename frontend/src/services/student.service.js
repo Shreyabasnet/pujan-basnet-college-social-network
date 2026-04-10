@@ -18,7 +18,7 @@ const studentService = {
     getAttendanceSummary: () => api.get('/student/attendance/summary'),
     
     // Timetable
-    getTimetable: () => api.get('/student/timetable'),
+    getTimetable: () => api.get('/student/timetable/me'),
 
     // Reminders
     getReminders: () => api.get('/student/reminders'),
