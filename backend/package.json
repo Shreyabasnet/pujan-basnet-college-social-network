@@ -13,7 +13,7 @@
   "author": "Pujan Basnet",
   "license": "ISC",
   "engines": {
-    "node": "25.x"
+    "node": "24.x"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
