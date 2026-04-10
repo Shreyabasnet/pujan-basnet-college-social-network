@@ -2,6 +2,15 @@ import { execSync } from 'child_process';
 
 const port = Number(process.argv[2] || 5000);
 
+const commandExists = (command) => {
+  try {
+    execSync(`command -v ${command}`, { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const killPortOnWindows = (targetPort) => {
   const output = execSync(`netstat -ano -p tcp | findstr :${targetPort}`, { encoding: 'utf8' });
   const pids = new Set();
@@ -28,19 +37,36 @@ const killPortOnWindows = (targetPort) => {
 
 const killPortOnUnix = (targetPort) => {
   try {
-    const output = execSync(`lsof -ti tcp:${targetPort}`, { encoding: 'utf8' }).trim();
+    let output = '';
+
+    if (commandExists('lsof')) {
+      output = execSync(`lsof -ti tcp:${targetPort}`, {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+    } else if (commandExists('fuser')) {
+      output = execSync(`fuser -n tcp ${targetPort}`, {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+    } else {
+      // No supported tool available to free a port on this environment.
+      return;
+    }
+
     if (!output) return;
 
     output
       .split(/\r?\n/)
+      .flatMap((line) => line.split(/\s+/))
       .map((pid) => pid.trim())
       .filter(Boolean)
       .forEach((pid) => {
-        execSync(`kill -9 ${pid}`);
+        execSync(`kill -9 ${pid}`, { stdio: 'ignore' });
         console.log(`Stopped process ${pid} on port ${targetPort}`);
       });
   } catch {
-    // Nothing listening on the port, or lsof is unavailable.
+    // Nothing listening on the port or command output is unavailable.
   }
 };
 
