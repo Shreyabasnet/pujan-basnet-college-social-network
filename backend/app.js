@@ -22,17 +22,30 @@ import connectCloudinary from "./src/config/cloudinary.js";
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.io setup with CORS - allow all origins
+// Socket.io setup with CORS - allow specific origin with credentials
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://pujan-basnet-college-social-network.vercel.app",
+      process.env.FRONTEND_URL || ""
+    ].filter(Boolean),
     methods: ["GET", "POST"],
-    credentials: false
+    credentials: true
   }
 });
 
-// Middleware - allow all origins
-app.use(cors());
+// Middleware - allow specific origins with credentials
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://pujan-basnet-college-social-network.vercel.app",
+    process.env.FRONTEND_URL || ""
+  ].filter(Boolean),
+  credentials: true
+}));
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
