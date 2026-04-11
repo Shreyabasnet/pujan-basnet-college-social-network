@@ -22,28 +22,17 @@ import connectCloudinary from "./src/config/cloudinary.js";
 const app = express();
 const httpServer = createServer(app);
 
-// CORS origins configuration - allow both local development and production
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  process.env.FRONTEND_URL || "", // Add production frontend URL
-  process.env.ALLOWED_ORIGINS || "" // Add any additional allowed origins
-].filter(Boolean); // Remove empty strings
-
-// Socket.io setup with CORS
+// Socket.io setup with CORS - allow all origins
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: "*",
     methods: ["GET", "POST"],
-    credentials: true
+    credentials: false
   }
 });
 
-// Middleware
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+// Middleware - allow all origins
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
