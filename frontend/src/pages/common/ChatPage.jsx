@@ -89,9 +89,7 @@ const ChatPage = () => {
                 formData.append('file', selectedFile);
             }
 
-            const res = await api.post(`/messages/send/${selectedUser._id}`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const res = await api.post(`/messages/send/${selectedUser._id}`, formData);
 
             setMessages((prev) => [...prev, res.data]);
             setConversations((prev) => moveConversationToTop(prev, selectedUser._id));

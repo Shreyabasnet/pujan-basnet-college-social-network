@@ -12,11 +12,6 @@ export const uploadToCloudinary = (fileBuffer, folder = "collegesocial") => {
             {
                 folder: folder,
                 resource_type: "auto",
-                transformation: [
-                    { width: 1200, height: 1200, crop: "limit" },
-                    { quality: "auto" },
-                    { fetch_format: "auto" }
-                ]
             },
             (error, result) => {
                 if (error) {
