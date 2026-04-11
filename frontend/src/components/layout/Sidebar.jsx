@@ -79,19 +79,13 @@ const Sidebar = ({ menuItems = [], isOpen, toggleSidebar }) => {
                 className={`fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition duration-300 transform bg-white border-r lg:translate-x-0 lg:static lg:inset-0 ${isOpen ? 'translate-x-0 ease-out' : '-translate-x-full ease-in'
                     }`}
             >
-                <div className="flex items-center justify-between px-6 py-4 border-b">
-                    <div className="flex items-center">
-                        <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center mr-2">
-                            <span className="text-white font-bold text-lg">C</span>
-                        </div>
-                        <span className="text-xl font-bold text-gray-900">CollegeSocial</span>
-                    </div>
-                    <button onClick={toggleSidebar} className="lg:hidden text-gray-500 hover:text-gray-700">
+                <div className="flex items-center justify-between px-6 py-4 border-b lg:hidden">
+                    <button onClick={toggleSidebar} className="text-gray-500 hover:text-gray-700">
                         <X size={24} />
                     </button>
                 </div>
 
-                <nav className="mt-4">
+                <nav className="mt-0">
                     {menuItems.map((item, index) => (
                         <SidebarItem
                             key={index}
@@ -101,12 +95,6 @@ const Sidebar = ({ menuItems = [], isOpen, toggleSidebar }) => {
                         />
                     ))}
                 </nav>
-
-                <div className="absolute bottom-0 w-full p-4 border-t bg-gray-50">
-                    <div className="flex items-center text-xs text-gray-400">
-                        <p>© 2026 CollegeSocial v1.0.0</p>
-                    </div>
-                </div>
             </aside>
         </>
     );

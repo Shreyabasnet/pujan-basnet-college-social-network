@@ -1,6 +1,7 @@
 import Message from '../models/Message.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
+import { uploadToCloudinary } from '../utils/cloudinaryUpload.js';
 
 export const sendMessage = async (req, res) => {
     try {
@@ -8,17 +9,38 @@ export const sendMessage = async (req, res) => {
         const { id: receiverId } = req.params;
         const senderId = req.user.id;
 
+        console.log('Sending message - File:', req.file ? 'Present' : 'None', 'Text:', text ? 'Present' : 'Empty');
+
+        let fileUrl = '';
+        let fileName = '';
+
+        // Upload file to Cloudinary if provided
+        if (req.file) {
+            try {
+                console.log('Uploading file to Cloudinary:', req.file.originalname, 'Size:', req.file.size);
+                const result = await uploadToCloudinary(req.file.buffer, 'collegesocial/messages');
+                fileUrl = result.url;
+                fileName = req.file.originalname;
+                console.log('File uploaded successfully:', fileUrl);
+            } catch (error) {
+                console.error('Cloudinary upload error:', error);
+                return res.status(500).json({ message: 'File upload failed', error: error.message });
+            }
+        }
+
+        if (!text && !fileUrl) {
+            return res.status(400).json({ message: 'Message cannot be empty' });
+        }
+
         const newMessage = new Message({
             sender: senderId,
             receiver: receiverId,
             text,
-            fileUrl: req.file ? `/uploads/pdfs/${req.file.filename}` : '',
-            fileName: req.file ? req.file.originalname : '',
+            fileUrl,
+            fileName,
         });
 
-
         await newMessage.save();
-
         await newMessage.populate('sender', 'username profilePicture department role');
 
         // Create a notification for the receiver when a new message arrives.
@@ -46,6 +68,7 @@ export const sendMessage = async (req, res) => {
 
         res.status(201).json(newMessage);
     } catch (error) {
+        console.error('Send message error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };

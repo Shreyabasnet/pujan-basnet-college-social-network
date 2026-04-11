@@ -3,11 +3,9 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import io from 'socket.io-client';
+import { SOCKET_ENDPOINT } from '../../config/constants';
 import { Send, Search, MoreVertical, File, Paperclip, X, Image as ImageIcon, Smile, Sparkles, MessageSquare, Users, ChevronRight } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-
-const ENDPOINT = 'http://localhost:5000';
-let socket;
 
 const ChatPage = () => {
     const { user } = useAuth();
@@ -26,6 +24,7 @@ const ChatPage = () => {
     const messagesEndRef = useRef(null);
     const conversationsRef = useRef([]);
     const activeChatRef = useRef(null);
+    let socket;
 
     const moveConversationToTop = (list, userId) => {
         if (!userId) return list;
@@ -99,8 +98,11 @@ const ChatPage = () => {
             setNewMessage('');
             setSelectedFile(null);
             if (fileInputRef.current) fileInputRef.current.value = '';
+            toast.success('Message sent!');
         } catch (error) {
-            console.error(error);
+            console.error('Send message error:', error);
+            const errorMsg = error.response?.data?.message || error.message || 'Failed to send message';
+            toast.error(errorMsg);
         }
     };
 
@@ -153,7 +155,7 @@ const ChatPage = () => {
     }, [conversations]);
 
     useEffect(() => {
-        socket = io(ENDPOINT);
+        socket = io(SOCKET_ENDPOINT);
         if (user) {
             socket.emit('join_room', user.id || user._id);
         }
@@ -397,7 +399,7 @@ const ChatPage = () => {
                                                                         <div className={`mt-3 flex items-center gap-2 rounded-2xl border px-3 py-2 ${isMe ? 'border-white/20 bg-white/10' : 'border-slate-200 bg-slate-50'}`}>
                                                                             <File className={`h-5 w-5 ${isMe ? 'text-white' : 'text-rose-500'}`} />
                                                                             <a
-                                                                                href={msg.fileUrl.startsWith('http') ? msg.fileUrl : `http://localhost:5000${msg.fileUrl}`}
+                                                                                href={msg.fileUrl.startsWith('http') ? msg.fileUrl : `${SOCKET_ENDPOINT}${msg.fileUrl}`}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"
                                                                                 className={`truncate text-xs font-semibold hover:underline ${isMe ? 'text-white' : 'text-slate-700'}`}
@@ -501,7 +503,7 @@ const ChatPage = () => {
                                         type="file"
                                         ref={fileInputRef}
                                         className="hidden"
-                                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/jpg"
                                         onChange={(e) => setSelectedFile(e.target.files[0])}
                                     />
                                     <input
