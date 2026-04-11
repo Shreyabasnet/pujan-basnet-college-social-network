@@ -83,14 +83,25 @@ const ChatPage = () => {
         if ((!newMessage.trim() && !selectedFile) || !selectedUser) return;
 
         try {
+            console.log('Sending message:', {
+                text: newMessage,
+                file: selectedFile?.name,
+                receiverId: selectedUser._id
+            });
+
             const formData = new FormData();
-            formData.append('text', newMessage);
+            formData.append('text', newMessage || '');
             if (selectedFile) {
+                console.log('Appending file to FormData:', selectedFile.name, selectedFile.size);
                 formData.append('file', selectedFile);
+                console.log('FormData keys:', Array.from(formData.keys()));
             }
 
             const res = await api.post(`/messages/send/${selectedUser._id}`, formData);
 
+            console.log('Message sent successfully:', res.data);
+            
+            // Only clear after successful response
             setMessages((prev) => [...prev, res.data]);
             setConversations((prev) => moveConversationToTop(prev, selectedUser._id));
             setNewMessage('');
