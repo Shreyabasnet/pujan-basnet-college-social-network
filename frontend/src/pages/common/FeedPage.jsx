@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import CreatePost from '../../components/teacher/CreatePost.jsx';
 import PostCard from '../../components/teacher/PostCard.jsx';
@@ -19,8 +19,13 @@ const FeedPage = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const { user } = useAuth();
     const location = useLocation();
+    const observerTarget = useRef(null);
+    const POSTS_PER_PAGE = 10;
 
     const selectedPostId = useMemo(() => {
         const params = new URLSearchParams(location.search);
@@ -79,24 +84,74 @@ const FeedPage = () => {
         { to: '/chat', label: 'Open chat', helper: 'Continue a conversation', icon: MessageSquare },
     ];
 
-    const fetchPosts = async () => {
-        setLoading(true);
+    const fetchPosts = async (pageNum = 1, isLoadMore = false) => {
+        if (isLoadMore) {
+            setLoadingMore(true);
+        } else {
+            setLoading(true);
+        }
         setError('');
         try {
-            const res = await api.get('/posts');
+            const res = await api.get(`/posts?page=${pageNum}&limit=${POSTS_PER_PAGE}`);
             const nextPosts = Array.isArray(res.data) ? res.data : res.data?.posts;
-            setPosts(Array.isArray(nextPosts) ? nextPosts : []);
+            const postsArray = Array.isArray(nextPosts) ? nextPosts : [];
+            
+            if (pageNum === 1) {
+                setPosts(postsArray);
+            } else {
+                setPosts((prevPosts) => [...prevPosts, ...postsArray]);
+            }
+            
+            // Check if there are more posts to load
+            setHasMore(postsArray.length === POSTS_PER_PAGE);
+            setPage(pageNum);
         } catch (error) {
             console.error(error);
-            setError('Unable to load the feed right now.');
+            if (pageNum === 1) {
+                setError('Unable to load the feed right now.');
+            } else {
+                toast.error('Failed to load more posts');
+            }
         } finally {
-            setLoading(false);
+            if (isLoadMore) {
+                setLoadingMore(false);
+            } else {
+                setLoading(false);
+            }
         }
     };
+
+    const loadMore = useCallback(() => {
+        if (!loadingMore && hasMore) {
+            fetchPosts(page + 1, true);
+        }
+    }, [page, loadingMore, hasMore]);
 
     useEffect(() => {
         fetchPosts();
     }, []);
+
+    // Infinite scroll observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+                    loadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (observerTarget.current) {
+            observer.observe(observerTarget.current);
+        }
+
+        return () => {
+            if (observerTarget.current) {
+                observer.unobserve(observerTarget.current);
+            }
+        };
+    }, [loadMore, hasMore, loadingMore, loading]);
 
     useEffect(() => {
         if (!selectedPostId || loading || posts.length === 0) return;
@@ -186,7 +241,11 @@ const FeedPage = () => {
 
                 <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
                     <main className="space-y-6">
-                        <CreatePost onPostCreated={fetchPosts} />
+                        <CreatePost onPostCreated={() => {
+                            setPage(1);
+                            setHasMore(true);
+                            fetchPosts();
+                        }} />
 
                         {error && (
                             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 shadow-sm">
@@ -239,6 +298,24 @@ const FeedPage = () => {
                                         isHighlighted={selectedPostId === post._id}
                                     />
                                 ))}
+                                
+                                {/* Infinite scroll observer target */}
+                                <div
+                                    ref={observerTarget}
+                                    className="flex justify-center py-8"
+                                >
+                                    {loadingMore && (
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-3 w-3 animate-bounce rounded-full bg-primary-600" style={{ animationDelay: '0ms' }} />
+                                            <div className="h-3 w-3 animate-bounce rounded-full bg-primary-600" style={{ animationDelay: '150ms' }} />
+                                            <div className="h-3 w-3 animate-bounce rounded-full bg-primary-600" style={{ animationDelay: '300ms' }} />
+                                            <span className="ml-2 text-sm text-slate-600">Loading more posts...</span>
+                                        </div>
+                                    )}
+                                    {!hasMore && posts.length > 0 && (
+                                        <p className="text-sm text-slate-500">You've reached the end of the feed</p>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </main>

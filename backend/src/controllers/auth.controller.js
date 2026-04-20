@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import crypto from "crypto";
 import sendMail from '../utils/mailer.js';
 
+// Register a new user
 export const register = async (req, res) => {
     try {
         const { username, email, password, role, department, year } = req.body;
@@ -41,6 +42,7 @@ export const register = async (req, res) => {
     }
 };
 
+// Login user and generate JWT
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Calendar, ChevronRight, GraduationCap, MessageCircle, Sparkles, Users } from 'lucide-react';
+import { BookOpen, Calendar, ChevronRight, GraduationCap, MessageCircle, Sparkles, Users, Mail, Phone, MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const LandingPage = () => {
@@ -99,6 +99,67 @@ const LandingPage = () => {
                     />
                 </div>
             </div>
+
+            {/* Footer */}
+            <footer className="border-t border-blue-800 bg-blue-900 mt-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
+                        <div>
+                            <h3 className="text-lg font-bold text-white mb-4">CollegeHub</h3>
+                            <p className="text-sm text-blue-200">Your comprehensive campus community platform for students, teachers, and administrators.</p>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-white mb-4">Product</h4>
+                            <ul className="space-y-2">
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Features</Link></li>
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Pricing</Link></li>
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Security</Link></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-white mb-4">Company</h4>
+                            <ul className="space-y-2">
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">About</Link></li>
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Contact</Link></li>
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Support</Link></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-white mb-4">Legal</h4>
+                            <ul className="space-y-2">
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Privacy Policy</Link></li>
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Terms of Service</Link></li>
+                                <li><Link to="#" className="text-sm text-blue-200 hover:text-white transition">Cookie Policy</Link></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-white mb-4">Contact</h4>
+                            <ul className="space-y-3">
+                                <li className="flex items-start gap-3">
+                                    <Mail className="h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0" />
+                                    <a href="mailto:info@collegehub.com" className="text-sm text-blue-200 hover:text-white transition">info@collegehub.com</a>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <Phone className="h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0" />
+                                    <a href="tel:9842650123" className="text-sm text-blue-200 hover:text-white transition">9842650123</a>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <MapPin className="h-4 w-4 text-blue-300 mt-0.5 flex-shrink-0" />
+                                    <span className="text-sm text-blue-200">Damak, Jhapa</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="border-t border-blue-800 pt-8 flex flex-col md:flex-row items-center justify-between">
+                        <p className="text-sm text-blue-200">&copy; 2026 CollegeHub. All rights reserved.</p>
+                        <div className="flex gap-6 mt-4 md:mt-0">
+                            <a href="#" className="text-blue-200 hover:text-white transition">Twitter</a>
+                            <a href="#" className="text-blue-200 hover:text-white transition">LinkedIn</a>
+                            <a href="#" className="text-blue-200 hover:text-white transition">GitHub</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };
